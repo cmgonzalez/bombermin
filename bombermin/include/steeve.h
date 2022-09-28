@@ -1,1 +1,0 @@
-extern void beepSteve(unsigned char) __z88dk_fastcall;
