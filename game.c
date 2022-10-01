@@ -42,7 +42,7 @@ void main(void) {
   printPaper(INK_WHITE);
   printInk(INK_BLACK);
   printAt(0, 12);
-  printf("Bomberman");
+  printf("Bombermin");
   printAt(23, 14);
   printf("Demo");
 
@@ -77,12 +77,20 @@ void main(void) {
   NIRVANAP_ISR_HOOK[0] = 205;
   z80_wpoke(&NIRVANAP_ISR_HOOK[1], (unsigned int)im2);
 
+  // Atributos de fondo para pintar al limpiar
+  attrs_back = &arr_back[0];
+  attrs_fire_red = &arr_fire_red[0];
+  attrs_fire_yellow = &arr_fire_yellow[0];
+
   player_radius = 4;
   // Bucle principal del Juego
   for (;;) {
     zx_border(INK_WHITE);
-    explode_check();
+    // Anima Bombas
     bomb_anim();
+    // Explota Bombas
+    explode_check();
+    // Pausa
     z80_delay_ms(25);
   }
 }
@@ -554,8 +562,16 @@ unsigned char map_empty(unsigned char l, unsigned char c) {
  * Restaura dibujo de un casillero del mapa, según las coordenadas
  */
 void map_restore(unsigned char l, unsigned char c) {
-  //
   btile_draw(screen[scroll + map_calc(l, c)], l, c);
+  // unsigned char v = screen[scroll + map_calc(l, c)];
+  // switch (v) {
+  // case BLOCK_EMPTY:
+  //   btile_paint(attrs_back, l, c);
+  //   break;
+  // default:
+  //   btile_draw(screen[scroll + map_calc(l, c)], l, c);
+  //   break;
+  // }
 }
 
 /*
@@ -614,7 +630,9 @@ void im2() {
   // Aumenta "Reloj"
   zx_border(INK_WHITE);
   ++time;
-  entity_anim();
+  if (!im2_pause) {
+    entity_anim();
+  }
 }
 
 /*
@@ -665,7 +683,7 @@ void bomb_add() {
   b = 0;
   // Chequeo si ya hay una bomba en esa posición
   while (b < MAX_BOMBS) {
-    if (bombl[b] == l && bombc[b] == c) {
+    if (bomb_lin[b] == l && bomb_col[b] == c) {
       return;
     }
     ++b;
@@ -674,8 +692,8 @@ void bomb_add() {
   b = bomb_get();
   // Seteo la bomba
   if (b < MAX_BOMBS) {
-    bombl[b] = l;
-    bombc[b] = c;
+    bomb_lin[b] = l;
+    bomb_col[b] = c;
     bombf[b] = BOMB_FRAMES;
     map_set(BLOCK_BOMB, l, c);
   }
@@ -693,7 +711,7 @@ void bomb_anim() {
   while (b < MAX_BOMBS) {
     if (bombf[b] < BOMB_OFF) {
       // Animación Bomba
-      sprite_draw(b, BTILE_BOMB + (bombf[b] % 3), bombl[b], bombc[b]);
+      sprite_draw(b, BTILE_BOMB + (bombf[b] % 3), bomb_lin[b], bomb_col[b]);
       --bombf[b];
     }
     ++b;
@@ -707,30 +725,177 @@ void bomb_anim() {
  *
  */
 void bomb_explode(unsigned char b) {
+  unsigned char v;
+
   // Limpia sprite Nirvana
   NIRVANAP_spriteT(b, 0, 0, 0);
+
   // Parametros inciales de Explosión
-  explo_d = 1;
-  explo_u = 1;
-  explo_l = 1;
-  explo_r = 1;
-  explo_pow = 0;
-  // Limpia Mapa
-  map_set(BLOCK_EMPTY, bombl[b], bombc[b]);
-  // Animación explosion
-  explode(1, bombl[b], bombc[b]);
-  if (player_radius < 2) {
-    explo_pow = 1;
-    explode(1, bombl[b], bombc[b]);
-    explo_pow = 2;
-    explode(1, bombl[b], bombc[b]);
+  explo_down[b] = bomb_lin[b];
+  explo_up[b] = bomb_lin[b];
+  explo_left[b] = bomb_col[b];
+  explo_right[b] = bomb_col[b];
+  // Calcula margenes
+
+  // Abajo Tope 160
+  foo = bomb_lin[b] + (player_radius << 4); //(player_radius * 16);
+  if (foo > 160) {
+    foo = 160;
   }
-  // Limpia Explosión
-  map_set(BLOCK_EMPTY, bombl[b], bombc[b]);
-  explode_restore(player_radius, bombl[b], bombc[b]);
+  while (explo_down[b] < foo &&
+         map_get(explo_down[b] + 16, bomb_col[b]) == BLOCK_EMPTY) {
+    explo_down[b] += 16;
+  }
+
+  // Arriba Tope 8
+  foo = bomb_lin[b] - (player_radius << 4); //(player_radius * 16);
+  if (foo > 160) {
+    // Overflow
+    foo = 8;
+  }
+
+  while (explo_up[b] > foo &&
+         map_get(explo_up[b] - 16, bomb_col[b]) == BLOCK_EMPTY) {
+    explo_up[b] -= 16;
+  }
+
+  // Izquierda Tope 2
+  foo = bomb_col[b] - (player_radius << 1); //(player_radius * 2);
+  if (foo > 30) {
+    // Overflow
+    foo = 2;
+  }
+  while (explo_left[b] > foo &&
+         map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
+    explo_left[b] -= 2;
+  }
+
+  // Derecha Tope 30
+  foo = bomb_col[b] + (player_radius << 1); //(player_radius * 2);
+  if (foo > 30) {
+    // Overflow
+    foo = 30;
+  }
+  while (explo_right[b] < foo &&
+         map_get(bomb_lin[b], explo_right[b] + 2) == BLOCK_EMPTY) {
+    explo_right[b] += 2;
+  }
+
+  // Animación Explosion
+  bombf[b] = BOMB_EXPLODE1;
+  explode_draw(b, 0);
+  explode_explode(b);
+  explode_paint(b, attrs_fire_yellow);
+  explode_paint(b, attrs_fire_red);
+  bombf[b] = BOMB_EXPLODE2;
+  explode_draw(b, 8);
+  explode_explode(b);
+  bombf[b] = BOMB_EXPLODE3;
+  explode_draw(b, 16);
+  explode_explode(b);
+  // Restauro
   bombf[b] = BOMB_OFF;
-  bombc[b] = BOMB_OFF;
-  bombl[b] = BOMB_OFF;
+  explode_paint(b, attrs_back);
+  explode_explode(b);
+  // Limpia Mapa para no confundir a la función explode
+  map_set(BLOCK_EMPTY, bomb_lin[b], bomb_col[b]);
+  // Limpia Pantalla
+  NIRVANAP_halt();
+  // btile_draw(BTILE_EMPTY, bomb_lin[b], bomb_col[b]);
+  // Desactiva Bomba
+  bomb_col[b] = BOMB_OFF;
+  bomb_lin[b] = BOMB_OFF;
+}
+
+void explode_explode(unsigned char b) {
+  explode_cell(b, explo_up[b] - 16, bomb_col[b]);
+  explode_cell(b, explo_down[b] + 16, bomb_col[b]);
+  explode_cell(b, bomb_lin[b], explo_left[b] - 2);
+  explode_cell(b, bomb_lin[b], explo_right[b] + 2);
+}
+
+void explode_cell(unsigned char b, unsigned char l, unsigned char c) {
+  switch (screen[scroll + map_calc(l, c)]) {
+  case BLOCK_BRICK:
+    /* code */
+    if (bombf[b] >= BOMB_EXPLODE3) {
+      btile_draw_halt(BTILE_BRICK_EXP + (BOMB_EXPLODE1 - bombf[b]), l, c);
+    } else {
+      btile_draw_halt(BTILE_EMPTY, l, c);
+      map_set(BLOCK_EMPTY, l, c);
+    }
+    break;
+  case BLOCK_BOMB:
+    /* code */
+    bomb_activate(l, c);
+    break;
+  default:
+    break;
+  }
+}
+
+void explode_draw(unsigned char b, unsigned char p) {
+  unsigned char i;
+  unsigned char j;
+  im2_pause = 1;
+  // Vertical
+  i = explo_down[b];
+  j = 0;
+  NIRVANAP_halt();
+  btile_draw(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b]);
+  if (i == bomb_lin[b]) {
+    i -= 16;
+  }
+  while (i >= explo_up[b]) {
+    if (!(j & 3)) {
+      NIRVANAP_halt();
+    }
+    ++j;
+    btile_draw(BTILE_EXPLO + p + 1, i, bomb_col[b]);
+    i -= 16;
+    if (i == bomb_lin[b]) {
+      i -= 16;
+    }
+  }
+  // Horizontal
+  i = explo_left[b];
+  if (i == bomb_col[b]) {
+    i += 2;
+  }
+  while (i <= explo_right[b]) {
+    if (!(j & 3)) {
+      NIRVANAP_halt();
+    }
+    ++j;
+    btile_draw(BTILE_EXPLO + p + 2, bomb_lin[b], i);
+    i += 2;
+    if (i == bomb_col[b]) {
+      i += 2;
+    }
+  }
+  im2_pause = 0;
+}
+
+void explode_paint(unsigned char b, unsigned char *a) {
+  unsigned char i;
+
+  im2_pause = 1;
+  // Vertical
+  i = explo_down[b];
+  NIRVANAP_halt();
+  while (i >= explo_up[b]) {
+    btile_paint(a, i, bomb_col[b]);
+    i -= 16;
+  }
+  // Horizontal
+  i = explo_left[b];
+
+  NIRVANAP_halt();
+  while (i <= explo_right[b]) {
+    btile_paint(a, bomb_lin[b], i);
+    i += 2;
+  }
+  im2_pause = 0;
 }
 
 /*
@@ -744,7 +909,7 @@ void bomb_scroll(signed char s) {
   b = 0;
   while (b < MAX_BOMBS) {
     if (bombf[b] != BOMB_EXPLODE) {
-      bombc[b] = bombc[b] - (s << 1); //*2
+      bomb_col[b] = bomb_col[b] - (s << 1); //*2
     }
     ++b;
   }
@@ -761,117 +926,9 @@ void explode_check() {
   b = 0;
   while (b < MAX_BOMBS) {
     if (bombf[b] == BOMB_EXPLODE) {
-      // if (player_ghost < 2)
-      //   player_ghost = 3;
-      // if (player_ghost > 16)
-      //   player_ghost = 3;
-      // print_char(player_ghost, 0, 0);
-      // beepSteve(player_ghost);
-      // ++player_ghost;
-
       bomb_explode(b);
     }
     ++b;
-  }
-}
-
-/*
- * Function:  explode
- * --------------------
- * Explota una bomba, con radio r
- *
- */
-void explode(unsigned char r, unsigned char l, unsigned char c) {
-  unsigned char rc;
-  unsigned char rl;
-  if (r <= player_radius) {
-    beepSteve(14);
-    rc = r << 1; //* 2;
-    rl = r << 4; //* 16;
-    // To avoid parameters
-    explo_rad = r;
-
-    // Centro Explosión
-    if (r == 1) {
-      explode_map(0, l, c);
-    }
-    // Abajo
-    if (explo_d && explode_map(1, l + rl, c)) {
-      explo_d = 0;
-    }
-    // Arriba
-    if (explo_u && explode_map(2, l - rl, c)) {
-      explo_u = 0;
-    }
-    // Izquierda
-    if (explo_l && explode_map(3, l, c - rc)) {
-      explo_l = 0;
-    }
-    // Derecha
-    if (explo_r && explode_map(4, l, c + rc)) {
-      explo_r = 0;
-    }
-
-    // Recursividad
-    explode(r + 1, l, c);
-  }
-  // Unlock player to avoid crashes
-  explo_rad = 0;
-}
-
-/*
- * Function:  explode_map
- * --------------------
- * Explota una cuadricula del mapa, dibuja y fija en el mapa
- *
- */
-unsigned char explode_map(unsigned char t, unsigned char l, unsigned char c) {
-  unsigned char v = map_get(l, c);
-
-  switch (v) {
-  case BLOCK_EMPTY:
-    // Debo determinar el tipo de fin de explosion
-    switch (t) {
-    case 0: // Centro
-      btile_draw_halt(BTILE_EXPLO + (explo_pow << 3), l, c);
-      break;
-    case 1: // Abajo
-      btile_draw_halt(BTILE_EXPLO + 1 + (explo_pow << 3), l, c);
-      if (explo_rad == player_radius) // Fin Explosión
-        btile_half_v(1, BTILE_EXPLO + 3 + (explo_pow << 3), l + 8, c);
-      break;
-    case 2: // Arriba
-      btile_draw_halt(BTILE_EXPLO + 1 + (explo_pow << 3), l, c);
-      if (explo_rad == player_radius) // Fin Explosión
-        btile_half_v(0, BTILE_EXPLO + 3 + (explo_pow << 3), l, c);
-      break;
-    case 3: // Izquierda
-      btile_draw_halt(BTILE_EXPLO + 2 + (explo_pow << 3), l, c);
-      if (explo_rad == player_radius) // Fin Explosión
-        btile_half_h(1, BTILE_EXPLO + 4 + (explo_pow << 3), l, c - 1);
-      break;
-    case 4: // Derecha
-      btile_draw_halt(BTILE_EXPLO + 2 + (explo_pow << 3), l, c);
-      if (explo_rad == player_radius) // Fin Explosión
-        btile_half_h(0, BTILE_EXPLO + 4 + (explo_pow << 3), l, c + 1);
-      break;
-    default:
-      break;
-    }
-    return 0;
-    break;
-  case BLOCK_BRICK:
-    btile_draw_halt(BTILE_BRICK_EXP, l, c);
-    map_set(BLOCK_EMPTY, l, c);
-    return 1;
-    break;
-  case BLOCK_BOMB:
-    bomb_activate(l, c);
-    return 1;
-    break;
-  default:
-    return 1;
-    break;
   }
 }
 
@@ -879,7 +936,7 @@ void bomb_activate(unsigned char l, unsigned char c) {
   unsigned char b;
   b = 0;
   while (b < MAX_BOMBS) {
-    if (bombf[b] < BOMB_OFF && bombl[b] == l && bombc[b] == c) {
+    if (bombf[b] < BOMB_OFF && bomb_lin[b] == l && bomb_col[b] == c) {
       zx_border(INK_RED);
       bombf[b] = BOMB_EXPLODE;
       bomb_explode(b);
@@ -887,34 +944,16 @@ void bomb_activate(unsigned char l, unsigned char c) {
     ++b;
   }
 }
+void explode_restore(unsigned char b) {
+  unsigned char i = explo_down[b];
 
-/*
- * Function:  explode_restore
- * --------------------
- * Restaura el dibujo de una explosión
- *
- */
-void explode_restore(unsigned char r, unsigned char l, unsigned char c) {
-
-  if (r > 0) {
-    // Abajo
-    NIRVANAP_halt();
-    map_restore(l + (16 * r), c);
-    // Arriba
-    NIRVANAP_halt();
-    map_restore(l - (16 * r), c);
-    // Izquierda
-    NIRVANAP_halt();
-    map_restore(l, c - (2 * r));
-    // Derecha
-    NIRVANAP_halt();
-    map_restore(l, c + (2 * r));
-    if (r == 1) {
-      // Centro
-      NIRVANAP_halt();
-      map_restore(l, c);
-    }
-    // Recursividad
-    explode_restore(r - 1, l, c);
+  while (i < explo_up[b]) {
+    btile_paint(attrs_back, i, bomb_col[b]);
+    i += 16;
+  }
+  i = explo_left[b] + 2;
+  while (i < explo_right[b] - 2) {
+    btile_paint(attrs_back, bomb_lin[b], i);
+    i += 2;
   }
 }

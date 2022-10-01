@@ -272,6 +272,13 @@ void btile_draw_l(unsigned char til, unsigned char lin, unsigned char col) {
     }
   }
 }
+
+void btile_paint(unsigned char *a, unsigned char l, unsigned char c) {
+  if (l < 192 && c < 31) {
+    NIRVANAP_fillT_raw(*a, l, c);
+  }
+}
+
 /*
  * Function:  sprite_draw
  * --------------------

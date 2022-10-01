@@ -44,10 +44,12 @@ void draw_rst_init();
 
 // Definiciones de Funciones
 void print_udg(unsigned char, unsigned char, unsigned char);
-void print_char(unsigned char, unsigned char, unsigned char);
+void print_char(unsigned char ch, unsigned char r, unsigned char c);
 void print_int(unsigned int, unsigned char, unsigned char);
 void print_udg_nirv(unsigned char, unsigned char, unsigned char);
 void btile_draw(unsigned char, unsigned char, unsigned char);
+void btile_paint(unsigned char *a, unsigned char l, unsigned char c);
+
 void btile_draw_halt(unsigned char, unsigned char, unsigned char);
 void sprite_draw(unsigned char s, unsigned char t, unsigned char l,
                  unsigned char c);

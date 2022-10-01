@@ -29,7 +29,7 @@ all:
 #	@mv map.txt assets/map.txt
 #Crea Tap loader del loader.bas
 	@echo 'Compilando Cargador Basic (utils\bas2tap)'
-	@./utils/bas2tap -a10 -sPARSER loader.bas loader.tap > /dev/null
+	@./utils/bas2tap -a10 -sBOMBERMIN loader.bas loader.tap > /dev/null
 #Empaqueta Pantalla de Carga
 	@z88dk-appmake +zx -b assets/screen.scr -o screen.tap --blockname SCREEN --org 16384 --noloader		
 #Compila Juego

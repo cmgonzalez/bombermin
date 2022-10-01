@@ -50,10 +50,14 @@ udk_t k1;
 
 // Bombas
 #define BOMB_FRAMES 10
-#define BOMB_OFF 254
+#define BOMB_OFF 128
+#define BOMB_EXPLODE3 252
+#define BOMB_EXPLODE2 253
+#define BOMB_EXPLODE1 254
 #define BOMB_EXPLODE 255
 
 // Btiles
+#define BTILE_EMPTY 0
 #define BTILE_EXPLO 24
 #define BTILE_BOMB 29
 #define BTILE_BRICK_EXP 37
@@ -80,10 +84,10 @@ udk_t k1;
 #define BIT_DEAD 128
 
 // Tipos de Bloques del mapa, 48 bloques max
-#define T_BG 0   // Fondos
-#define T_FG 1   // 1er Plano usa sprites nirvana z-index superior
-#define T_PL 2   // Plataformas/Escaleras
-#define T_SO 3   // Sólidos
+#define T_BG 0 // Fondos
+#define T_FG 1 // 1er Plano usa sprites nirvana z-index superior
+#define T_PL 2 // Plataformas/Escaleras
+#define T_SO 3 // Sólidos
 #define T_ER 255 // Fuera de Pantalla
 
 //------------------------------------------------------------
@@ -130,27 +134,53 @@ unsigned char scroll;
 
 // Atributos Nirvanisticos
 unsigned char *attrs;
+unsigned char *attrs_back;
+unsigned char *attrs_fire_red;
+unsigned char *attrs_fire_yellow;
+
 unsigned char att[4];
+unsigned char arr_back[4] = {
+    PAPER_GREEN | INK_GREEN,
+    PAPER_GREEN | INK_GREEN,
+    PAPER_GREEN | INK_GREEN,
+    PAPER_GREEN | INK_GREEN,
+};
+unsigned char arr_fire_red[4] = {
+    PAPER_YELLOW | INK_RED,
+    PAPER_YELLOW | INK_RED,
+    PAPER_YELLOW | INK_RED,
+    PAPER_YELLOW | INK_RED,
+};
+unsigned char arr_fire_yellow[4] = {
+    PAPER_RED | INK_YELLOW,
+    PAPER_RED | INK_YELLOW,
+    PAPER_RED | INK_YELLOW,
+    PAPER_RED | INK_YELLOW,
+};
 
 // Bombas
-unsigned char bombc[MAX_BOMBS];
-unsigned char bombl[MAX_BOMBS];
+unsigned char bomb_col[MAX_BOMBS];
+unsigned char bomb_lin[MAX_BOMBS];
 unsigned char bombf[MAX_BOMBS];
 unsigned char bomb;
 
 // Explosiones
-unsigned char explo_u;
-unsigned char explo_d;
-unsigned char explo_l;
-unsigned char explo_r;
+unsigned char explo_up[MAX_BOMBS];
+unsigned char explo_down[MAX_BOMBS];
+unsigned char explo_left[MAX_BOMBS];
+unsigned char explo_right[MAX_BOMBS];
 
-unsigned char explo_pow;
-unsigned char explo_rad;
+unsigned char explo_cu[MAX_BOMBS];
+unsigned char explo_cd[MAX_BOMBS];
+unsigned char explo_cl[MAX_BOMBS];
+unsigned char explo_cr[MAX_BOMBS];
 
 // Valores del Player
 unsigned char player_radius;
 unsigned char player_bombs;
 unsigned char player_ghost;
+
+unsigned char im2_pause;
 
 //------------------------------------------------------------
 //------------------------------------------------------------
@@ -190,14 +220,16 @@ unsigned char bomb_get();
 void bomb_add();
 void bomb_anim();
 void bomb_scroll(signed char s);
-void explode_check();
 void bomb_explode(unsigned char b);
 void bomb_activate(unsigned char l, unsigned char c);
 
 // Explosiones
-void explode(unsigned char r, unsigned char l, unsigned char c);
-unsigned char explode_map(unsigned char t, unsigned char l, unsigned char c);
-void explode_restore(unsigned char r, unsigned char l, unsigned char c);
+void explode_draw(unsigned char b, unsigned char p);
+void explode_paint(unsigned char b, unsigned char *a);
+void explode_explode(unsigned char b);
+void explode_cell(unsigned char b, unsigned char l, unsigned char c);
+void explode_check();
+void explode_restore(unsigned char b);
 
 /*
 ************************************************************
