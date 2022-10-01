@@ -181,6 +181,7 @@ unsigned char player_bombs;
 unsigned char player_ghost;
 
 unsigned char im2_pause;
+unsigned char in_explo;
 
 //------------------------------------------------------------
 //------------------------------------------------------------
