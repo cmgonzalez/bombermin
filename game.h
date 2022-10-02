@@ -37,8 +37,8 @@ udk_t k1;
 #define FRAMES 3
 
 // Btiles asociados a Estados de las entidades
-#define PLAYER_HORIZONTAL 8
-#define PLAYER_VERTICAL 16
+#define BTILE_PLAYER_HOR 8
+#define BTILE_PLAYER_VER 16
 
 #define MAX_BOMBS 8
 
@@ -121,8 +121,11 @@ unsigned char *flag1;
 
 // Variables de las Entidades
 unsigned char dirs[ENTITIES];
-unsigned char cols[ENTITIES];
 unsigned char lins[ENTITIES];
+unsigned char cols[ENTITIES];
+
+unsigned char tiles[ENTITIES];
+
 unsigned char frames[ENTITIES];
 unsigned char flags0[ENTITIES];
 unsigned char flags1[ENTITIES];
@@ -181,6 +184,7 @@ unsigned char player_bombs;
 unsigned char player_ghost;
 
 unsigned char im2_pause;
+unsigned char im2_free = 1;
 unsigned char in_explo;
 
 //------------------------------------------------------------
@@ -197,13 +201,18 @@ void draw_2bt(unsigned int i, unsigned char l, unsigned char c,
 void im2();
 
 // Entidades
-void entity_set();
 
 // Mover Entidades
 void move_left();
 void move_right();
 void move_down();
 void move_up();
+
+unsigned char move_cleft();
+unsigned char move_cright();
+unsigned char move_cdown();
+unsigned char move_cup();
+
 void move_fire();
 
 // Mapas
@@ -214,6 +223,11 @@ void map_restore(unsigned char l, unsigned char c);
 unsigned char map_empty(unsigned char l, unsigned char c);
 void map_scroll(unsigned char d);
 void map_update();
+
+// Entities
+void entity_move_ballon();
+void entity_move_player();
+void entity_chdir();
 
 // Bombas
 void bomb_init();

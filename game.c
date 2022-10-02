@@ -47,15 +47,7 @@ void main(void) {
   printf("Demo");
 
   // Inicializa las entidades
-  entity = 0;
-  while (entity < ENTITIES) {
-    dirs[entity] = BIT_RIGHT;
-    cols[entity] = 2;
-    lins[entity] = 32;
-    frames[entity] = 2;
-    timer[entity] = time + entity;
-    ++entity;
-  }
+  entity_init();
 
   // Configura direcciones para los btiles y blocks(UDGs)
   NIRVANAP_tiles(_btiles);
@@ -85,7 +77,6 @@ void main(void) {
   player_radius = 4;
   // Bucle principal del Juego
   for (;;) {
-    zx_border(INK_WHITE);
     // Anima Bombas
     bomb_anim();
     // Explota Bombas
@@ -124,27 +115,33 @@ void draw_2bt(unsigned int i, unsigned char l, unsigned char c,
  * horizontalmente
  */
 void draw() {
+  unsigned char t;
   // Dibuja un entity
-  switch (*dir) {
-  case BIT_RIGHT:
-    foo = PLAYER_HORIZONTAL + *frame;
-    break;
-  case BIT_LEFT:
-    foo = PLAYER_HORIZONTAL + FRAMES + *frame;
-    break;
-  case BIT_DOWN:
-    foo = PLAYER_VERTICAL + *frame;
-    break;
-  case BIT_UP:
-    foo = PLAYER_VERTICAL + FRAMES + *frame;
-    break;
-  default:
-    break;
+  if (entity == 0) {
+    switch (dirs[0]) {
+    case BIT_RIGHT:
+      t = BTILE_PLAYER_HOR + *frame;
+      break;
+    case BIT_LEFT:
+      t = BTILE_PLAYER_HOR + FRAMES + *frame;
+      break;
+    case BIT_DOWN:
+      t = BTILE_PLAYER_VER + *frame;
+      break;
+    case BIT_UP:
+      t = BTILE_PLAYER_VER + FRAMES + *frame;
+      break;
+    default:
+      break;
+    }
+  } else {
+    t = tiles[entity] + *frame;
   }
+
   // Restaura Fondo
   draw_restore();
   // Tile Personaje
-  btile_draw(foo, *lin, *col);
+  btile_draw(t, *lin, *col);
 }
 
 /*
@@ -193,26 +190,7 @@ void map_draw() {
     lin0 += 16;
   }
 }
-/*
- * Function:  entity_set
- * --------------------
- * Asigna Punteros
- */
-void entity_anim() {
-  if ((time % 6) == 0) {
-    entity = 0;
-    frame = &frames[0];
-    dir = &dirs[0];
-    col = &cols[0];
-    lin = &lins[0];
-    // flag0 = &flags0[0];
-    // flag1 = &flags1[0];
-    dir0 = *dir;
-    col0 = *col;
-    lin0 = *lin;
-    move_player();
-  }
-}
+
 /*
  * Function:  frame_inc
  * --------------------
@@ -224,14 +202,64 @@ void frame_inc() {
     *frame = 0;
   }
 }
-
 /*
- * Function:  move_player
+ * Function:  entity_anim
+ * --------------------
+ * Anime entidades
+ */
+void entity_anim() {
+  im2_free = 0;
+  zx_border(INK_RED);
+  frame = &frames[entity];
+  col = &cols[entity];
+  lin = &lins[entity];
+  col0 = *col;
+  lin0 = *lin;
+
+  if (entity) {
+    entity_move_ballon();
+  } else {
+    entity_move_player();
+  }
+  ++entity;
+  if (entity > ENTITIES) {
+    entity = 0;
+  }
+  im2_free = 1;
+  zx_border(INK_WHITE);
+}
+/*
+ * Function:  entity_init
+ * --------------------
+ * Inicializa entidades
+ *
+ */
+void entity_init() {
+  entity = 0;
+  // Todos
+  while (entity < ENTITIES) {
+    dir = &dirs[entity];
+    entity_chdir();
+    // dirs[entity] = BIT_LEFT;
+    cols[entity] = (entity * 4) - 2;
+    lins[entity] = 64;
+    tiles[entity] = BTILE_BALLON;
+    frames[entity] = 2;
+    ++entity;
+  }
+  // Jugador
+  cols[0] = 2;
+  lins[0] = 32;
+  dirs[0] = BIT_RIGHT;
+  tiles[0] = BTILE_PLAYER_HOR;
+}
+/*
+ * Function:  entity_move_player
  * --------------------
  * Mueve al protagonista
  *
  */
-void move_player() {
+void entity_move_player() {
   unsigned inp;
   // Debug al apretar el Enter
   if (in_inkey() == 13) {
@@ -248,18 +276,22 @@ void move_player() {
     return;
   }
   if (inp & IN_STICK_LEFT) {
+    dirs[0] = BIT_LEFT;
     move_left();
     return;
   }
   if (inp & IN_STICK_RIGHT) {
+    dirs[0] = BIT_RIGHT;
     move_right();
     return;
   }
   if (inp & IN_STICK_DOWN) {
+    dirs[0] = BIT_DOWN;
     move_down();
     return;
   }
   if (inp & IN_STICK_UP) {
+    dirs[0] = BIT_UP;
     move_up();
     return;
   }
@@ -270,52 +302,65 @@ void move_player() {
 }
 
 /*
- * Function:  move_enemies
+ * Function:  entity_move_ballon
  * --------------------
  * Mueve a los enemigos
  *
  */
-void move_enemies() {
-  unsigned char ndir;
-  timer[entity] = time + 5;
-  foo = rand() & 0b00000111;
-  switch (foo) {
-  case 0:
-    // Detención
-    ndir = 0;
-    break;
-  case 1:
-    // Cambio ndir
-    if (bitCheck(*flag0, BIT_RIGHT)) {
-      ndir = 1;
-    } else {
-      ndir = 2;
-    }
-    break;
-  default:
-    // Continuar Marcha
-    if (bitCheck(*flag0, BIT_RIGHT)) {
-      ndir = 2;
-    } else {
-      ndir = 1;
-    }
+void entity_move_ballon() {
 
+  switch (dirs[entity]) {
+  case BIT_UP:
+    if (move_cup()) {
+      move_up();
+    } else {
+      entity_chdir();
+    }
+    break;
+  case BIT_DOWN:
+    if (move_cdown()) {
+      move_down();
+    } else {
+      entity_chdir();
+    }
+    break;
+  case BIT_LEFT:
+    if (move_cleft()) {
+      move_left();
+    } else {
+      entity_chdir();
+      // dirs[entity] = BIT_RIGHT;
+    }
+    break;
+  case BIT_RIGHT:
+    if (move_cright()) {
+      move_right();
+    } else {
+      // dirs[entity] = BIT_LEFT;
+      entity_chdir();
+    }
     break;
   }
 
-  switch (ndir) {
+  // frame_inc();
+  // draw();
+}
+
+void entity_chdir() {
+  unsigned char r = rand() % 4;
+  // zx_border(INK_RED);
+  switch (r) {
+  case 0:
+    dirs[entity] = BIT_UP;
+    break;
   case 1:
-    /* Izquierda */
-    move_left();
+    dirs[entity] = BIT_DOWN;
     break;
   case 2:
-    /* Derecha */
-    move_right();
+    dirs[entity] = BIT_LEFT;
     break;
-  default:
-    /* Nada */
-    *frame = 0;
-    draw();
+  case 3:
+    dirs[entity] = BIT_RIGHT;
     break;
   }
 }
@@ -339,14 +384,53 @@ void move_noinput() {
 void move_fire() { bomb_add(); }
 
 /*
+ * Function:  move_cup
+ * --------------------
+ * Se puede mover a la arriba?
+ *
+ */
+unsigned char move_cup() {
+  // Puede ir a la up
+  return map_empty(*lin - 8, *col);
+}
+/*
+ * Function:  move_cdown
+ * --------------------
+ * Se puede mover a la abajo?
+ *
+ */
+unsigned char move_cdown() {
+  // Puede ir a la izquierda
+  return map_empty(*lin + 16, *col);
+}
+/*
+ * Function:  move_cright
+ * --------------------
+ * Se puede mover a la derecha?
+ *
+ */
+unsigned char move_cright() {
+  // Puede ir a la derecha
+  return map_empty(*lin, *col + 2);
+}
+/*
+ * Function:  move_cleft
+ * --------------------
+ * Se puede mover a la izquierda!?
+ *
+ */
+unsigned char move_cleft() {
+  // Puede ir a la izquierda
+  return map_empty(*lin, *col - 1);
+}
+/*
  * Function:  move_right
  * --------------------
  * Mueve la entidad a la derecha
  *
  */
 void move_right() {
-  *dir = BIT_RIGHT;
-  if ((*lin % 16 == 0) && map_empty(*lin, *col + 2)) {
+  if ((*lin % 16 == 0) && move_cright()) {
 
     ++(*col);
     if (*col >= 24) {
@@ -370,8 +454,7 @@ void move_right() {
  *
  */
 void move_left() {
-  *dir = BIT_LEFT;
-  if ((*lin % 16 == 0) && map_empty(*lin, *col - 1)) {
+  if ((*lin % 16 == 0) && move_cleft()) {
 
     --(*col);
     if (*col <= 8) {
@@ -395,8 +478,7 @@ void move_left() {
  *
  */
 void move_up() {
-  *dir = BIT_UP;
-  if (map_empty(*lin - 8, *col)) {
+  if (move_cup()) {
     if (*col & 1) {
       return;
     }
@@ -416,10 +498,7 @@ void move_up() {
  *
  */
 void move_down() {
-  *dir = BIT_DOWN;
-
-  if (map_empty(*lin + 16, *col)) {
-
+  if (move_cdown()) {
     if (*col & 1) {
       return;
     }
@@ -549,8 +628,7 @@ void map_set(unsigned char v, unsigned char l, unsigned char c) {
  * Retorna si la coordenada permite desplazamiento
  */
 unsigned char map_empty(unsigned char l, unsigned char c) {
-  unsigned char v;
-  v = map_get(l, c);
+  unsigned char v = map_get(l, c);
   if (v == BLOCK_EMPTY) { // || v == BLOCK_BRICK) {
     return 1;
   } else {
@@ -629,9 +707,8 @@ unsigned char move_bloc_col(unsigned char c) {
  */
 void im2() {
   // Aumenta "Reloj"
-  zx_border(INK_WHITE);
   ++time;
-  if (!im2_pause) {
+  if (im2_free && !im2_pause) {
     entity_anim();
   }
 }
@@ -726,13 +803,13 @@ void bomb_anim() {
  *
  */
 void bomb_explode(unsigned char b) {
-  unsigned char v;
+
   switch (bombf[b]) {
   case BOMB_EXPLODE:
     /* code */
     // Limpia sprite Nirvana de la bomba
     NIRVANAP_spriteT(b, 0, 0, 0);
-
+    beepSteve(12);
     // Parametros inciales de Explosión
     explo_down[b] = bomb_lin[b];
     explo_up[b] = bomb_lin[b];
