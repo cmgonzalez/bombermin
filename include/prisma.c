@@ -183,14 +183,14 @@ void btile_half_h(unsigned char h, unsigned char bt, unsigned char l,
       bsrc += 2;
     }
   }
-  // // Pinta atributos
-  // if (h) {
-  //   NIRVANAP_paintC(bsrc + 0, l - 8, c + 1);
-  //   NIRVANAP_paintC(bsrc + 4, l, c + 1);
-  // } else {
-  //   NIRVANAP_paintC(bsrc + 8, l - 8, c);
-  //   NIRVANAP_paintC(bsrc + 12, l, c);
-  // }
+  // Pinta atributos
+  if (h) {
+    NIRVANAP_paintC(bsrc + 0, l - 8, c + 1);
+    NIRVANAP_paintC(bsrc + 4, l, c + 1);
+  } else {
+    NIRVANAP_paintC(bsrc + 8, l - 8, c);
+    NIRVANAP_paintC(bsrc + 12, l, c);
+  }
 }
 
 /*

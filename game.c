@@ -227,7 +227,7 @@ void entity_init() {
     entity_chdir();
     // dirs[entity] = BIT_LEFT;
     cols[entity] = (entity * 4) - 2;
-    lins[entity] = 64;
+    lins[entity] = 32;
     tiles[entity] = BTILE_BALLON;
     frames[entity] = 2;
     ++entity;
@@ -346,19 +346,49 @@ void entity_move_ballon() {
     }
     break;
   }
-  // Ver si esta visible
 
+  // if (in_inkey() == 49) { // i
+  //   if (move_cleft()) {
+  //     move_left();
+  //   }
+  // }
+  // if (in_inkey() == 50) { // d
+  //   if (move_cright()) {
+  //     move_right();
+  //   }
+  // }
+
+  // Determina si esta visible
   if (*col >= scroll_min && *col <= scroll_max) {
+    // Visible
 
     frame_inc();
-    draw();
-    if ((*col % 32) == 0) {
-      zx_border(INK_RED);
-      map_restore(lin0, *col);
+
+    // Borde Derecho
+    if ((*col - scroll_min) == 0) {
+      draw_restore();
+      btile_half_h(0, tiles[entity] + *frame, *lin, 0);
+      return;
     }
-    // if ((*col % 32) == 31) {
-    //   print_char(*col, 0, 0);
-    // }
+    // Borde Izquierdo
+    if ((*col - scroll_min) == 31) {
+      draw_restore();
+      btile_half_h(1, tiles[entity] + *frame, *lin, 30);
+      return;
+    }
+    // Normal
+    draw();
+  } else {
+    // No Visible
+    // Fuera de la pantalla limpia los bordes al salir a las areas no visibles
+    if ((*col - scroll_min) == 32) {
+      map_restore(lin0, scroll_min + 30);
+      return;
+    }
+    if ((scroll_min - *col) == 1) {
+      map_restore(lin0, scroll_min);
+      return;
+    }
   }
 }
 
@@ -505,8 +535,8 @@ void map_create() {
         screen[i] = BLOCK_SOLID;
       }
       // Ladrillos al Azar
-      // if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
-      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
+      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
+        // if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
         screen[i] = BLOCK_BRICK;
       }
 
@@ -520,7 +550,7 @@ void map_create() {
     }
     ++lin0;
   }
-  // Limpia Area del Player
+  // Despeja Area del Player
   screen[MAP_WIDTH + 1] = 0;
   screen[MAP_WIDTH + 2] = 0;
   screen[2 * MAP_WIDTH + 1] = 0;
@@ -786,7 +816,7 @@ void bomb_explode(unsigned char b) {
     /* code */
     // Limpia sprite Nirvana de la bomba
     NIRVANAP_spriteT(b, 0, 0, 0);
-    beepSteve(12);
+
     // Parametros inciales de Explosión
     explo_down[b] = bomb_lin[b];
     explo_up[b] = bomb_lin[b];
@@ -841,6 +871,7 @@ void bomb_explode(unsigned char b) {
     bombf[b] = BOMB_EXPLODE1;
     explode_draw(b, 0);
     explode_explode(b);
+    beepSteve(12);
     explode_paint(b, attrs_fire_yellow);
     explode_paint(b, attrs_fire_red);
     break;
