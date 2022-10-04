@@ -331,6 +331,7 @@ void entity_move_ballon() {
   case BIT_LEFT:
     if (move_cleft()) {
       move_left();
+
     } else {
       entity_chdir();
       // dirs[entity] = BIT_RIGHT;
@@ -347,9 +348,17 @@ void entity_move_ballon() {
   }
   // Ver si esta visible
 
-  if (*col > scroll_min && *col < scroll_max) {
+  if (*col >= scroll_min && *col <= scroll_max) {
+
     frame_inc();
     draw();
+    if ((*col % 32) == 0) {
+      zx_border(INK_RED);
+      map_restore(lin0, *col);
+    }
+    // if ((*col % 32) == 31) {
+    //   print_char(*col, 0, 0);
+    // }
   }
 }
 
@@ -496,6 +505,7 @@ void map_create() {
         screen[i] = BLOCK_SOLID;
       }
       // Ladrillos al Azar
+      // if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
       if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
         screen[i] = BLOCK_BRICK;
       }
@@ -514,6 +524,20 @@ void map_create() {
   screen[MAP_WIDTH + 1] = 0;
   screen[MAP_WIDTH + 2] = 0;
   screen[2 * MAP_WIDTH + 1] = 0;
+
+  // Agregar Entidades
+  entity = 1;
+  while (entity < ENTITIES) {
+    col0 = rand() % (16 * 3);
+    lin0 = rand() % 11;
+    col0 = (col0 >> 1) << 1;
+    lin0 = lin0 << 4;
+    if (map_get(lin0, col0) == BLOCK_EMPTY) {
+      cols[entity] = col0;
+      lins[entity] = lin0;
+      ++entity;
+    }
+  }
 
   // // Marco bordes para debug
   // screen[0] = 3;
@@ -741,7 +765,8 @@ void bomb_anim() {
   while (b < MAX_BOMBS) {
     if (bombf[b] < BOMB_OFF) {
       // Animación Bomba
-      sprite_draw(b, BTILE_BOMB + (bombf[b] % 3), bomb_lin[b], bomb_col[b]);
+      sprite_draw(b, BTILE_BOMB + (bombf[b] % 3), bomb_lin[b],
+                  bomb_col[b] - scroll_min);
       --bombf[b];
     }
     ++b;
@@ -860,9 +885,10 @@ void explode_cell(unsigned char b, unsigned char l, unsigned char c) {
   case BLOCK_BRICK:
     /* code */
     if (bombf[b] >= BOMB_EXPLODE3) {
-      btile_draw_halt(BTILE_BRICK_EXP + (BOMB_EXPLODE1 - bombf[b]), l, c);
+      btile_draw_halt(BTILE_BRICK_EXP + (BOMB_EXPLODE1 - bombf[b]), l,
+                      c - scroll_min);
     } else {
-      btile_draw_halt(BTILE_EMPTY, l, c);
+      btile_draw_halt(BTILE_EMPTY, l, c - scroll_min);
       map_set(BLOCK_EMPTY, l, c);
     }
     break;
@@ -883,7 +909,7 @@ void explode_draw(unsigned char b, unsigned char p) {
   i = explo_down[b];
   j = 0;
   NIRVANAP_halt();
-  btile_draw(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b]);
+  btile_draw(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b] - scroll_min);
   if (i == bomb_lin[b]) {
     i -= 16;
   }
@@ -892,7 +918,7 @@ void explode_draw(unsigned char b, unsigned char p) {
       NIRVANAP_halt();
     }
     ++j;
-    btile_draw(BTILE_EXPLO + p + 1, i, bomb_col[b]);
+    btile_draw(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
     i -= 16;
     if (i == bomb_lin[b]) {
       i -= 16;
@@ -908,7 +934,7 @@ void explode_draw(unsigned char b, unsigned char p) {
       NIRVANAP_halt();
     }
     ++j;
-    btile_draw(BTILE_EXPLO + p + 2, bomb_lin[b], i);
+    btile_draw(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
     i += 2;
     if (i == bomb_col[b]) {
       i += 2;
@@ -925,7 +951,7 @@ void explode_paint(unsigned char b, unsigned char *a) {
   i = explo_down[b];
   NIRVANAP_halt();
   while (i >= explo_up[b]) {
-    btile_paint(a, i, bomb_col[b]);
+    btile_paint(a, i, bomb_col[b] - scroll_min);
     i -= 16;
   }
   // Horizontal
@@ -933,7 +959,7 @@ void explode_paint(unsigned char b, unsigned char *a) {
 
   NIRVANAP_halt();
   while (i <= explo_right[b]) {
-    btile_paint(a, bomb_lin[b], i);
+    btile_paint(a, bomb_lin[b], i - scroll_min);
     i += 2;
   }
   im2_pause = 0;
@@ -991,12 +1017,12 @@ void explode_restore(unsigned char b) {
   unsigned char i = explo_down[b];
 
   while (i < explo_up[b]) {
-    btile_paint(attrs_back, i, bomb_col[b]);
+    btile_paint(attrs_back, i, bomb_col[b] - scroll_min);
     i += 16;
   }
   i = explo_left[b] + 2;
   while (i < explo_right[b] - 2) {
-    btile_paint(attrs_back, bomb_lin[b], i);
+    btile_paint(attrs_back, bomb_lin[b], i - scroll_min);
     i += 2;
   }
 }

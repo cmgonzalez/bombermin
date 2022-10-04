@@ -21,7 +21,7 @@ udk_t k1;
 //------------------------------------------------------------
 //------------------------------------------------------------
 // Cantidad de Entidades
-#define ENTITIES 2
+#define ENTITIES 16
 // Máxima linea nirvana
 #define MAX_LIN 168
 
