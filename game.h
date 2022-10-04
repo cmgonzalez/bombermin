@@ -117,7 +117,6 @@ unsigned char *dir;
 unsigned char *col;
 unsigned char *lin;
 
-
 // Variables de las Entidades
 unsigned char dirs[ENTITIES];
 unsigned char lins[ENTITIES];
@@ -126,9 +125,6 @@ unsigned char cols[ENTITIES];
 unsigned char tiles[ENTITIES];
 
 unsigned char frames[ENTITIES];
-unsigned char scrolls[ENTITIES];
-
-unsigned int timer[ENTITIES];
 
 // Mapa de Pantalla
 unsigned char screen[MAP_SIZE];
