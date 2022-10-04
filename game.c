@@ -58,7 +58,10 @@ void main(void) {
       PAPER_BLACK | INK_CYAN;
 
   // Extrae Habitación 0
-  scroll = 0;
+
+  scroll_min = 0;
+  scroll_max = 31;
+
   bomb = 0;
   map_create();
   bomb_init();
@@ -75,8 +78,19 @@ void main(void) {
   attrs_fire_yellow = &arr_fire_yellow[0];
 
   player_radius = 4;
+
   // Bucle principal del Juego
+  entity = 0;
+  im2_pause = 0;
   for (;;) {
+    // print_char(scrolls[0], 0, 0);
+    print_char(scrolls[1], 0, 0);
+
+    // print_char(lins[0], 0, 4);
+    print_char(lins[1], 0, 4);
+
+    // print_char(cols[0], 0, 8);
+    print_char(cols[1], 0, 8);
     // Anima Bombas
     bomb_anim();
     // Explota Bombas
@@ -84,27 +98,6 @@ void main(void) {
     // Pausa
     if (!in_explo)
       z80_delay_ms(25);
-  }
-}
-/*
- * Function:  draw_2bt
- * --------------------
- * Dibuja 2 btiles, si c2 se dibuja el segundo,
- * Usado como función de ayuda de la restauración del mapa
- */
-void draw_2bt(unsigned int i, unsigned char l, unsigned char c,
-              unsigned char c2) {
-
-  // chequeo si el indice i esta en el mapa
-  if (i < MAP_SIZE) {
-    draw_rst_add(screen[scroll + i + 00], l, c);
-    if (c2) {
-      if (c == 30) {
-        draw_rst_add(screen[scroll + i - 15], l, 0);
-      } else {
-        draw_rst_add(screen[scroll + i + 01], l, c + 2);
-      }
-    }
   }
 }
 
@@ -131,13 +124,10 @@ void draw() {
     case BIT_UP:
       t = BTILE_PLAYER_VER + FRAMES + *frame;
       break;
-    default:
-      break;
     }
   } else {
     t = tiles[entity] + *frame;
   }
-
   // Restaura Fondo
   draw_restore();
   // Tile Personaje
@@ -154,6 +144,7 @@ void draw_restore() {
   if (*col == col0 && *lin == lin0) {
     return;
   }
+  // map_restore(lin0 >> 4 << 4, col0 >> 1 << 1);
   map_restore(lin0, col0);
 }
 
@@ -181,7 +172,7 @@ void map_draw() {
   while (lin0 < 192) {
     col0 = 0;
     while (col0 < 31) {
-      NIRVANAP_drawT_raw(screen[i + scroll], lin0, col0);
+      NIRVANAP_drawT_raw(screen[i + scroll_min], lin0, col0);
       ++i;
       col0 += 2;
     }
@@ -209,20 +200,22 @@ void frame_inc() {
  */
 void entity_anim() {
   im2_free = 0;
-  zx_border(INK_RED);
+
   frame = &frames[entity];
   col = &cols[entity];
   lin = &lins[entity];
   col0 = *col;
   lin0 = *lin;
 
+  // print_char(entity, 0, 0);
   if (entity) {
     entity_move_ballon();
+    ++entity;
   } else {
     entity_move_player();
   }
   ++entity;
-  if (entity > ENTITIES) {
+  if (entity >= ENTITIES) {
     entity = 0;
   }
   im2_free = 1;
@@ -245,6 +238,7 @@ void entity_init() {
     lins[entity] = 64;
     tiles[entity] = BTILE_BALLON;
     frames[entity] = 2;
+    scrolls[entity] = 0;
     ++entity;
   }
   // Jugador
@@ -252,6 +246,7 @@ void entity_init() {
   lins[0] = 32;
   dirs[0] = BIT_RIGHT;
   tiles[0] = BTILE_PLAYER_HOR;
+  scrolls[0] = 0;
 }
 /*
  * Function:  entity_move_player
@@ -264,7 +259,7 @@ void entity_move_player() {
   // Debug al apretar el Enter
   if (in_inkey() == 13) {
     printAt(0, 6);
-    printf("L%3iC%3iF%3iF%3i", *lin, *col, *flag0, *flag1);
+    printf("L%3iC%3i", *lin, *col);
     z80_delay_ms(50);
   }
   // Fijo la próxima llamada en 5 frames, TODO ponerla al final...
@@ -272,31 +267,50 @@ void entity_move_player() {
   inp = (joyfunc1)(&k1);
 
   if (inp & IN_STICK_FIRE) {
-    move_fire();
+    bomb_add();
+    frame_inc();
+    draw();
     return;
   }
   if (inp & IN_STICK_LEFT) {
     dirs[0] = BIT_LEFT;
     move_left();
+    if (*col <= 8) {
+      // Desplaza Mapa a la Izquierda
+      map_scroll(BIT_LEFT);
+    }
+    frame_inc();
+    draw();
     return;
   }
   if (inp & IN_STICK_RIGHT) {
     dirs[0] = BIT_RIGHT;
     move_right();
+    if (*col >= 24) {
+      // Desplaza Mapa a la Derecha
+      map_scroll(BIT_RIGHT);
+    }
+    frame_inc();
+    draw();
     return;
   }
   if (inp & IN_STICK_DOWN) {
     dirs[0] = BIT_DOWN;
     move_down();
+    frame_inc();
+    draw();
     return;
   }
   if (inp & IN_STICK_UP) {
     dirs[0] = BIT_UP;
     move_up();
+    frame_inc();
+    draw();
     return;
   }
   if (inp == 0) {
-    move_noinput();
+    *frame = 0;
+    draw();
     return;
   }
 }
@@ -327,6 +341,11 @@ void entity_move_ballon() {
   case BIT_LEFT:
     if (move_cleft()) {
       move_left();
+      if (*col > 31) {
+        // Desplaza Mapa a la Izquierda
+        scrolls[entity] -= 31;
+        *col = 31;
+      }
     } else {
       entity_chdir();
       // dirs[entity] = BIT_RIGHT;
@@ -335,15 +354,24 @@ void entity_move_ballon() {
   case BIT_RIGHT:
     if (move_cright()) {
       move_right();
+      if (*col > 31) {
+        // Desplaza Mapa a la Derecha
+        scrolls[entity] += 31;
+        *col = 0;
+      }
     } else {
       // dirs[entity] = BIT_LEFT;
       entity_chdir();
     }
     break;
   }
+  // Ver si esta visible
 
-  // frame_inc();
-  // draw();
+  if ((*col + scrolls[entity]) > scroll_min &&
+      (*col + scrolls[entity]) < scroll_max) {
+    frame_inc();
+    draw();
+  }
 }
 
 void entity_chdir() {
@@ -366,41 +394,23 @@ void entity_chdir() {
 }
 
 /*
- * Function:  move_noinput
- * --------------------
- * Sin input del usuario vuelve a posición inicial
- *
- */
-void move_noinput() {
-  *frame = 0;
-  draw();
-}
-/*
- * Function:  move_fire
- * --------------------
- * Pone una bomba
- *
- */
-void move_fire() { bomb_add(); }
-
-/*
  * Function:  move_cup
  * --------------------
- * Se puede mover a la arriba?
+ * Comprueba si se puede mover a arriba
  *
  */
 unsigned char move_cup() {
-  // Puede ir a la up
+  // Puede ir hacia arriba?
   return map_empty(*lin - 8, *col);
 }
 /*
  * Function:  move_cdown
  * --------------------
- * Se puede mover a la abajo?
+ * Comprueba si se puede mover a abajo
  *
  */
 unsigned char move_cdown() {
-  // Puede ir a la izquierda
+  // Puede ir a la abajo?
   return map_empty(*lin + 16, *col);
 }
 /*
@@ -431,20 +441,8 @@ unsigned char move_cleft() {
  */
 void move_right() {
   if ((*lin % 16 == 0) && move_cright()) {
-
     ++(*col);
-    if (*col >= 24) {
-      if (entity == 0) {
-        // Scroll
-        map_scroll(BIT_RIGHT);
-      }
-    }
-    if (*col > 30) {
-      *col = 30;
-    }
   }
-  frame_inc();
-  draw();
 }
 
 /*
@@ -455,20 +453,8 @@ void move_right() {
  */
 void move_left() {
   if ((*lin % 16 == 0) && move_cleft()) {
-
     --(*col);
-    if (*col <= 8) {
-      if (entity == 0) {
-        // Scroll
-        map_scroll(BIT_LEFT);
-      }
-    }
-    if (*col > 30) {
-      *col = 0;
-    }
   }
-  frame_inc();
-  draw();
 }
 
 /*
@@ -487,8 +473,6 @@ void move_up() {
       *lin = MAX_LIN;
     }
   }
-  frame_inc();
-  draw();
 }
 
 /*
@@ -507,8 +491,6 @@ void move_down() {
       *lin = MIN_LIN; // 256 - 8 pseudo negativo
     }
   }
-  frame_inc();
-  draw();
 }
 /*
  * Function:  map_create
@@ -535,7 +517,7 @@ void map_create() {
         screen[i] = BLOCK_SOLID;
       }
       // Ladrillos al Azar
-      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 4) {
+      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
         screen[i] = BLOCK_BRICK;
       }
 
@@ -571,23 +553,26 @@ void map_scroll(unsigned char d) {
   switch (d) {
   case BIT_RIGHT:
     /* code */
-    if (scroll < 31) {
+    if (scroll_min < 31) {
       bomb_scroll(8);
-      scroll += 8;
+      scroll_min += 8;
       *col = 8;
       map_update();
     }
     break;
   case BIT_LEFT:
     /* code */
-    if (scroll > 0) {
+    if (scroll_min > 0) {
       bomb_scroll(-8);
-      scroll -= 8;
+      scroll_min -= 8;
       *col = 32 - 8;
       map_update();
     }
     break;
   }
+
+  scrolls[0] = scroll_min;
+  scroll_max = scroll_min + 32;
   // Descomprime y Dibuja la habitación
 }
 
@@ -612,14 +597,14 @@ unsigned char map_get(unsigned char l, unsigned char c) {
   unsigned int i;
   i = map_calc(l, c);
   if (i < MAP_SIZE) {
-    return screen[scroll + i];
+    return screen[scrolls[entity] + i];
   } else {
     return T_ER;
   }
 }
 
 void map_set(unsigned char v, unsigned char l, unsigned char c) {
-  screen[scroll + map_calc(l, c)] = v;
+  screen[scroll_min + map_calc(l, c)] = v;
 }
 
 /*
@@ -641,16 +626,7 @@ unsigned char map_empty(unsigned char l, unsigned char c) {
  * Restaura dibujo de un casillero del mapa, según las coordenadas
  */
 void map_restore(unsigned char l, unsigned char c) {
-  btile_draw(screen[scroll + map_calc(l, c)], l, c);
-  // unsigned char v = screen[scroll + map_calc(l, c)];
-  // switch (v) {
-  // case BLOCK_EMPTY:
-  //   btile_paint(attrs_back, l, c);
-  //   break;
-  // default:
-  //   btile_draw(screen[scroll + map_calc(l, c)], l, c);
-  //   break;
-  // }
+  btile_draw(screen[scroll_min + map_calc(l, c)], l, c);
 }
 
 /*
@@ -904,7 +880,7 @@ void explode_explode(unsigned char b) {
 }
 
 void explode_cell(unsigned char b, unsigned char l, unsigned char c) {
-  switch (screen[scroll + map_calc(l, c)]) {
+  switch (screen[scroll_min + map_calc(l, c)]) {
   case BLOCK_BRICK:
     /* code */
     if (bombf[b] >= BOMB_EXPLODE3) {

@@ -21,7 +21,7 @@ udk_t k1;
 //------------------------------------------------------------
 //------------------------------------------------------------
 // Cantidad de Entidades
-#define ENTITIES 6
+#define ENTITIES 2
 // Máxima linea nirvana
 #define MAX_LIN 168
 
@@ -116,8 +116,7 @@ unsigned char *frame;
 unsigned char *dir;
 unsigned char *col;
 unsigned char *lin;
-unsigned char *flag0;
-unsigned char *flag1;
+
 
 // Variables de las Entidades
 unsigned char dirs[ENTITIES];
@@ -127,13 +126,14 @@ unsigned char cols[ENTITIES];
 unsigned char tiles[ENTITIES];
 
 unsigned char frames[ENTITIES];
-unsigned char flags0[ENTITIES];
-unsigned char flags1[ENTITIES];
+unsigned char scrolls[ENTITIES];
+
 unsigned int timer[ENTITIES];
 
 // Mapa de Pantalla
 unsigned char screen[MAP_SIZE];
-unsigned char scroll;
+unsigned char scroll_min;
+unsigned char scroll_max;
 
 // Atributos Nirvanisticos
 unsigned char *attrs;
@@ -183,7 +183,7 @@ unsigned char player_radius;
 unsigned char player_bombs;
 unsigned char player_ghost;
 
-unsigned char im2_pause;
+unsigned char im2_pause = 1;
 unsigned char im2_free = 1;
 unsigned char in_explo;
 
@@ -192,10 +192,6 @@ unsigned char in_explo;
 // Definiciones de Funciones
 //------------------------------------------------------------
 //------------------------------------------------------------
-
-// Dibujo
-void draw_2bt(unsigned int i, unsigned char l, unsigned char c,
-              unsigned char c2);
 
 // Interrupciones
 void im2();
