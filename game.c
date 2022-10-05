@@ -191,6 +191,30 @@ void frame_inc() {
     *frame = 0;
   }
 }
+unsigned char entity_getnext() {
+  unsigned char e;
+
+  ++entity_im2;
+  if (entity_im2 >= ENTITIES) {
+    entity_im2 = 1;
+  }
+  e = entity_im2;
+  while (e) {
+    if (time >= timers[e]) {
+      entity_im2 = e;
+      return e;
+    }
+
+    ++e;
+    if (e >= ENTITIES) {
+      e = 1;
+    }
+    if (e == entity_im2) {
+      return e;
+    }
+  }
+  return 1;
+}
 /*
  * Function:  entity_anim
  * --------------------
@@ -199,35 +223,46 @@ void frame_inc() {
 void entity_anim() {
   im2_free = 0;
 
-  frame = &frames[entity];
-  col = &cols[entity];
-  lin = &lins[entity];
-  col0 = *col;
-  lin0 = *lin;
-
-  switch (types[entity]) {
-  case ENT_PLAYER:
-    entity_move_player();
-    break;
-  case ENT_BALLON:
-    entity_move_ballon();
-    break;
-  case ENT_BEAKER:
-    entity_move_ballon();
-    break;
-  case ENT_DIE:
-    draw();
-    break;
-  default:
-    // frame_inc();
-    // draw();
-    entity_move_ballon();
-    break;
-  }
-  ++entity;
-  if (entity >= ENTITIES) {
+  if ((time & 3) == 0) {
     entity = 0;
+  } else {
+    entity = entity_getnext(); // entity_im2;
   }
+  if (time >= timers[entity]) {
+    frame = &frames[entity];
+    col = &cols[entity];
+    lin = &lins[entity];
+    col0 = *col;
+    lin0 = *lin;
+    switch (types[entity]) {
+    case ENT_PLAYER:
+      entity_move_player();
+      break;
+    case ENT_BALLON:
+      entity_move_ballon();
+      break;
+    case ENT_BEAKER:
+      entity_move_ballon();
+      break;
+    case ENT_DIE:
+      draw();
+      break;
+    default:
+      // frame_inc();
+      // draw();
+      entity_move_ballon();
+      break;
+    }
+
+    // ++entity_im2;
+    // if (entity_im2 >= ENTITIES) {
+    //   entity_im2 = 1;
+    // }
+    if (entity) {
+      timers[entity] = time + 10;
+    }
+  }
+
   im2_free = 1;
   zx_border(INK_WHITE);
 }
@@ -240,13 +275,6 @@ void entity_collision() {
       if ((abs(cols[e] - cols[0]) < 2) && (abs(lins[e] - lins[0]) < 16)) {
         zx_border(INK_RED);
         player_hit = 1;
-        // print_char(abs(cols[e] - cols[0]), 0, 0);
-        // print_char(abs(lins[e] - lins[0]), 0, 8);
-        // print_char(cols[0], 1, 0);
-        // print_char(cols[e], 1, 8);
-        // print_char(lins[0], 2, 0);
-        // print_char(lins[e], 2, 8);
-        // print_char(e, 0, 20);
         return;
       }
     }
@@ -429,9 +457,7 @@ void entity_move_ballon() {
   // Determina si esta visible
   if (*col >= scroll_min && *col <= scroll_max) {
     // Visible
-
     frame_inc();
-
     // Borde Derecho
     if ((*col - scroll_min) == 0) {
       draw_restore();
@@ -476,9 +502,13 @@ void entity_chdir() {
  */
 void entity_die(unsigned char e) {
   zx_border(INK_RED);
-  types[e] = ENT_DIE;
-  // tiles[e] = BTILE_EXPLO;
-  frames[e] = 3;
+  if (e) {
+    // Enemigo
+    types[e] = ENT_DIE;
+    frames[e] = 3;
+  } else {
+    // Player
+  }
 }
 /*
  * Function:  move_cup

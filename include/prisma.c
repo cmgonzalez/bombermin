@@ -166,7 +166,10 @@ void btile_half_h(unsigned char h, unsigned char bt, unsigned char l,
   unsigned char *bsrc;
   unsigned char lin_end;
   if (l < 192 && c < 31) {
-    bsrc = &btiles[bt * 48];
+    // bsrc = &btiles[bt * 48];
+    // bsrc = &btiles[(bt * 32) + (bt * 16)];
+    bsrc = &btiles[(bt << 5) + (bt << 4)];
+
     // Dibuja Pixeles en cada orilla de la pantalla
     l = l - 8;
     lin_end = l + 16;
@@ -185,7 +188,7 @@ void btile_half_h(unsigned char h, unsigned char bt, unsigned char l,
   }
   // Pinta atributos
   if (h) {
-    NIRVANAP_paintC(bsrc + 0, l - 8, c + 1);
+    NIRVANAP_paintC(bsrc, l - 8, c + 1);
     NIRVANAP_paintC(bsrc + 4, l, c + 1);
   } else {
     NIRVANAP_paintC(bsrc + 8, l - 8, c);
@@ -211,10 +214,10 @@ void btile_half_v(unsigned char h, unsigned char bt, unsigned char l,
     lin_end = l + 8;
     if (h) {
       // Mitad Inferior
-      bsrc = &btiles[(bt * 48) + 16];
+      bsrc = &btiles[((bt << 5) + (bt << 4)) + 16];
     } else {
       // Mitad Superior
-      bsrc = &btiles[bt * 48];
+      bsrc = &btiles[(bt << 5) + (bt << 4)];
     }
 
     while (l < lin_end) {
@@ -226,15 +229,15 @@ void btile_half_v(unsigned char h, unsigned char bt, unsigned char l,
       ++l;
       bsrc += 2;
     }
-    // // Pinta atributos
-    // bsrc = &btiles[(bt * 48) + 32];
-    // if (h) {
-    //   NIRVANAP_paintC(bsrc + 4, l, c);
-    //   NIRVANAP_paintC(bsrc + 12, l, c + 1);
-    // } else {
-    //   NIRVANAP_paintC(bsrc + 0, l, c);
-    //   NIRVANAP_paintC(bsrc + 8, l, c + 1);
-    // }
+    // Pinta atributos
+    bsrc = &btiles[(bt << 5) + (bt << 4) + 32];
+    if (h) {
+      NIRVANAP_paintC(bsrc + 4, l, c);
+      NIRVANAP_paintC(bsrc + 12, l, c + 1);
+    } else {
+      NIRVANAP_paintC(bsrc + 0, l, c);
+      NIRVANAP_paintC(bsrc + 8, l, c + 1);
+    }
   }
 }
 /*

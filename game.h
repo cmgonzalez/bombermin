@@ -128,6 +128,8 @@ unsigned char foo;
 unsigned char fanim;
 unsigned char entity;
 
+unsigned char entity_im2 = 0;
+
 // Ubicación inicial de la entidad
 unsigned char dir0;
 unsigned char col0;
@@ -147,6 +149,8 @@ unsigned char types[ENTITIES];
 unsigned char dirs[ENTITIES];
 unsigned char lins[ENTITIES];
 unsigned char cols[ENTITIES];
+
+unsigned int timers[ENTITIES];
 
 unsigned char tiles[ENTITIES];
 
