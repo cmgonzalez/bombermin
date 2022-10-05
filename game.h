@@ -21,7 +21,7 @@ udk_t k1;
 //------------------------------------------------------------
 //------------------------------------------------------------
 // Cantidad de Entidades
-#define ENTITIES 10
+#define ENTITIES 8
 // Máxima linea nirvana
 #define MAX_LIN 168
 
@@ -35,10 +35,6 @@ udk_t k1;
 
 // Cuadros de Animación
 #define FRAMES 3
-
-// Btiles asociados a Estados de las entidades
-#define BTILE_PLAYER_HOR 8
-#define BTILE_PLAYER_VER 16
 
 #define MAX_BOMBS 8
 
@@ -56,13 +52,23 @@ udk_t k1;
 #define BOMB_EXPLODE1 254
 #define BOMB_EXPLODE 255
 
-// Btiles
+// Btiles asociados a las entidades
 #define BTILE_EMPTY 0
 #define BTILE_EXPLO 24
 #define BTILE_BOMB 29
 #define BTILE_BRICK_EXP 37
-#define BTILE_BALLON 45
-#define BTILE_BALLON2 45 + 3
+
+#define BTILE_PLAYER_HOR 8
+#define BTILE_PLAYER_VER 16
+#define BTILE_BALLON 44
+#define BTILE_BEAKER 44 + 4
+#define BTILE_LANTERN 44 + 8
+#define BTILE_FACE 44 + 12
+#define BTILE_JELLY 44 + 16
+#define BTILE_GHOST 44 + 20
+#define BTILE_BEAR 44 + 24
+#define BTILE_COIN 44 + 28
+#define BTILE_DIE 44 + 32
 
 // definición de bits para flags0 (bits)
 #define BIT_UP 1
@@ -83,6 +89,24 @@ udk_t k1;
 #define BIT_CANDOWN 32
 #define BIT_LOCK 64
 #define BIT_DEAD 128
+
+// sfx
+#define SFX_BOMB_ADD 2
+#define SFX_BOMB_EXPLO 12
+#define SFX_BOMB_STEP 14
+
+// Entidades
+#define ENT_PLAYER 0
+#define ENT_BALLON 1
+#define ENT_BEAKER 2
+#define ENT_LANTERN 3
+#define ENT_FACE 4
+#define ENT_JELLY 5
+#define ENT_GHOST 6
+#define ENT_BEAR 7
+#define ENT_COIN 8
+#define ENT_DIE 254
+#define ENT_OFF 255
 
 // Tipos de Bloques del mapa, 48 bloques max
 #define T_BG 0 // Fondos
@@ -119,6 +143,7 @@ unsigned char *col;
 unsigned char *lin;
 
 // Variables de las Entidades
+unsigned char types[ENTITIES];
 unsigned char dirs[ENTITIES];
 unsigned char lins[ENTITIES];
 unsigned char cols[ENTITIES];
@@ -179,10 +204,13 @@ unsigned char explo_cr[MAX_BOMBS];
 unsigned char player_radius;
 unsigned char player_bombs;
 unsigned char player_ghost;
+unsigned char player_hit;
 
 unsigned char im2_pause = 1;
 unsigned char im2_free = 1;
 unsigned char in_explo;
+
+unsigned char sfx = 1;
 
 //------------------------------------------------------------
 //------------------------------------------------------------
@@ -234,6 +262,7 @@ void bomb_activate(unsigned char l, unsigned char c);
 void explode_draw(unsigned char b, unsigned char p);
 void explode_paint(unsigned char b, unsigned char *a);
 void explode_explode(unsigned char b);
+void explode_kill(unsigned char b);
 void explode_cell(unsigned char b, unsigned char l, unsigned char c);
 void explode_check();
 void explode_restore(unsigned char b);

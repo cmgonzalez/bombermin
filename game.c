@@ -78,7 +78,7 @@ void main(void) {
   attrs_fire_red = &arr_fire_red[0];
   attrs_fire_yellow = &arr_fire_yellow[0];
 
-  player_radius = 4;
+  player_radius = 5;
 
   // Bucle principal del Juego
   entity = 0;
@@ -91,6 +91,11 @@ void main(void) {
     // Pausa
     if (!in_explo)
       z80_delay_ms(25);
+    entity_collision();
+    if (player_hit) {
+      beepSteve(9);
+      player_hit = 0;
+    }
   }
 }
 
@@ -200,13 +205,24 @@ void entity_anim() {
   col0 = *col;
   lin0 = *lin;
 
-  // print_char(entity, 0, 0);
-  if (entity) {
-    entity_move_ballon();
-    ++entity;
-  } else {
+  switch (types[entity]) {
+  case ENT_PLAYER:
     entity_move_player();
-    entity_collision();
+    break;
+  case ENT_BALLON:
+    entity_move_ballon();
+    break;
+  case ENT_BEAKER:
+    entity_move_ballon();
+    break;
+  case ENT_DIE:
+    draw();
+    break;
+  default:
+    // frame_inc();
+    // draw();
+    entity_move_ballon();
+    break;
   }
   ++entity;
   if (entity >= ENTITIES) {
@@ -220,8 +236,19 @@ void entity_collision() {
   unsigned char e = 1;
   // Todos
   while (e < ENTITIES) {
-    if (abs(cols[e] - cols[0]) <= 2 && abs(lins[e] - lins[0]) <= 16) {
-      zx_border(INK_RED);
+    if (types[e] < ENT_DIE) {
+      if ((abs(cols[e] - cols[0]) < 2) && (abs(lins[e] - lins[0]) < 16)) {
+        zx_border(INK_RED);
+        player_hit = 1;
+        // print_char(abs(cols[e] - cols[0]), 0, 0);
+        // print_char(abs(lins[e] - lins[0]), 0, 8);
+        // print_char(cols[0], 1, 0);
+        // print_char(cols[e], 1, 8);
+        // print_char(lins[0], 2, 0);
+        // print_char(lins[e], 2, 8);
+        // print_char(e, 0, 20);
+        return;
+      }
     }
     ++e;
   }
@@ -239,18 +266,15 @@ void entity_init() {
     dir = &dirs[entity];
     entity_chdir();
     // dirs[entity] = BIT_LEFT;
-    cols[entity] = (entity * 4) - 2;
+    cols[entity] = 2 + (entity * 2); // (entity * 4) - 2;
     lins[entity] = 32;
-    if (entity < 5) {
-      tiles[entity] = BTILE_BALLON;
-    } else {
-      tiles[entity] = BTILE_BALLON2;
-    }
-
+    types[entity] = 1 + (entity % 8);
+    tiles[entity] = BTILE_BALLON + (4 * ((entity - 1) % 8));
     frames[entity] = 2;
     ++entity;
   }
   // Jugador
+  types[0] = ENT_PLAYER;
   cols[0] = 2;
   lins[0] = 32;
   dirs[0] = BIT_RIGHT;
@@ -269,6 +293,13 @@ void entity_move_player() {
     printAt(0, 6);
     printf("L%3iC%3i", *lin, *col);
     z80_delay_ms(50);
+    print_char(sfx, 1, 0);
+    beepSteve(sfx);
+
+    ++sfx;
+    if (sfx > 16) {
+      sfx = 1;
+    }
   }
   // Fijo la próxima llamada en 5 frames, TODO ponerla al final...
 
@@ -322,7 +353,28 @@ void entity_move_player() {
     return;
   }
 }
-
+void entity_move_rc() {
+  if (in_inkey() == 49) { // i
+    if (move_cleft()) {
+      move_left();
+    }
+  }
+  if (in_inkey() == 50) { // d
+    if (move_cright()) {
+      move_right();
+    }
+  }
+  if (in_inkey() == 51) { // arr
+    if (move_cup()) {
+      move_up();
+    }
+  }
+  if (in_inkey() == 52) { // abajo
+    if (move_cdown()) {
+      move_down();
+    }
+  }
+}
 /*
  * Function:  entity_move_ballon
  * --------------------
@@ -365,16 +417,14 @@ void entity_move_ballon() {
     break;
   }
 
-  // if (in_inkey() == 49) { // i
-  //   if (move_cleft()) {
-  //     move_left();
-  //   }
-  // }
-  // if (in_inkey() == 50) { // d
-  //   if (move_cright()) {
-  //     move_right();
-  //   }
-  // }
+  if (*col == (scroll_min + 32)) {
+    map_restore(lin0, scroll_min + 30);
+    return;
+  }
+  if (*col == (scroll_min - 1)) {
+    map_restore(lin0, scroll_min);
+    return;
+  }
 
   // Determina si esta visible
   if (*col >= scroll_min && *col <= scroll_max) {
@@ -397,17 +447,6 @@ void entity_move_ballon() {
 
     // Normal
     draw();
-  } else {
-    // No Visible
-    // Fuera de la pantalla limpia los bordes al salir a las areas no visibles
-    if ((*col - scroll_min) == 32) {
-      map_restore(lin0, scroll_min + 30);
-      return;
-    }
-    if ((scroll_min - *col) == 1) {
-      map_restore(lin0, scroll_min);
-      return;
-    }
   }
 }
 
@@ -429,7 +468,18 @@ void entity_chdir() {
     break;
   }
 }
-
+/*
+ * Function:  entity_die
+ * --------------------
+ * Setea una entidad en agonizante
+ *
+ */
+void entity_die(unsigned char e) {
+  zx_border(INK_RED);
+  types[e] = ENT_DIE;
+  // tiles[e] = BTILE_EXPLO;
+  frames[e] = 3;
+}
 /*
  * Function:  move_cup
  * --------------------
@@ -574,7 +624,7 @@ void map_create() {
   screen[MAP_WIDTH + 2] = 0;
   screen[2 * MAP_WIDTH + 1] = 0;
 
-  // Agregar Entidades
+  // Posiciona Entidades
   entity = 1;
   while (entity < ENTITIES) {
     col0 = rand() % (16 * 3);
@@ -811,10 +861,14 @@ void bomb_anim() {
   b = 0;
   while (b < MAX_BOMBS) {
     if (bombf[b] < BOMB_OFF) {
+
       // Animación Bomba
       sprite_draw(b, BTILE_BOMB + (bombf[b] % 3), bomb_lin[b],
                   bomb_col[b] - scroll_min);
       --bombf[b];
+      if (bombf[b] == BOMB_FRAMES) {
+        beepSteve(SFX_BOMB_ADD);
+      }
     }
     ++b;
   }
@@ -865,10 +919,10 @@ void bomb_explode(unsigned char b) {
 
     // Izquierda Tope 2
     foo = bomb_col[b] - (player_radius << 1); //(player_radius * 2);
-    if (foo > 30) {
-      // Overflow
-      foo = 2;
-    }
+    // if (foo > 30) {
+    //   // Overflow
+    //   foo = 2;
+    // }
     while (explo_left[b] > foo &&
            map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
       explo_left[b] -= 2;
@@ -876,23 +930,25 @@ void bomb_explode(unsigned char b) {
 
     // Derecha Tope 30
     foo = bomb_col[b] + (player_radius << 1); //(player_radius * 2);
-    if (foo > 30) {
-      // Overflow
-      foo = 30;
-    }
+    // if (foo > 30) {
+    //   // Overflow
+    //   foo = 30;
+    // }
     while (explo_right[b] < foo &&
            map_get(bomb_lin[b], explo_right[b] + 2) == BLOCK_EMPTY) {
       explo_right[b] += 2;
     }
+
     // Animación Explosion
     bombf[b] = BOMB_EXPLODE1;
     explode_draw(b, 0);
     // Explota
     explode_explode(b);
     NIRVANAP_halt();
-    beepSteve(12);
+    beepSteve(SFX_BOMB_EXPLO);
     explode_paint(b, attrs_fire_yellow);
     explode_paint(b, attrs_fire_red);
+    explode_kill(b);
     break;
   case BOMB_EXPLODE1:
     bombf[b] = BOMB_EXPLODE2;
@@ -923,6 +979,27 @@ void bomb_explode(unsigned char b) {
   }
 }
 
+void explode_kill(unsigned char b) {
+  unsigned char e = 0;
+  // Todos
+  while (e < ENTITIES) {
+    if (types[e] < ENT_DIE) {
+      if ((explo_left[b] < cols[e]) &&      //
+          (explo_right[b] > cols[e]) &&     //
+          (abs(bomb_lin[b] - lins[e]) < 16) //
+      ) {
+        entity_die(e);
+      }
+      if ((explo_up[b] < lins[e]) &&       //
+          (explo_down[b] > lins[e]) &&     //
+          (abs(bomb_col[b] - cols[e]) < 2) //
+      ) {
+        entity_die(e);
+      }
+    }
+    ++e;
+  }
+}
 void explode_explode(unsigned char b) {
   explode_cell(b, explo_up[b] - 16, bomb_col[b]);
   explode_cell(b, explo_down[b] + 16, bomb_col[b]);
