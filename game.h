@@ -62,6 +62,7 @@ udk_t k1;
 #define BTILE_BOMB 29
 #define BTILE_BRICK_EXP 37
 #define BTILE_BALLON 45
+#define BTILE_BALLON2 45 + 3
 
 // definición de bits para flags0 (bits)
 #define BIT_UP 1
@@ -226,7 +227,6 @@ void bomb_init();
 unsigned char bomb_get();
 void bomb_add();
 void bomb_anim();
-void bomb_scroll(signed char s);
 void bomb_explode(unsigned char b);
 void bomb_activate(unsigned char l, unsigned char c);
 

@@ -25,6 +25,7 @@
  */
 
 void main(void) {
+  z80_delay_ms(250);
   // in_wait_key();
   // in_wait_nokey();
 
@@ -205,6 +206,7 @@ void entity_anim() {
     ++entity;
   } else {
     entity_move_player();
+    entity_collision();
   }
   ++entity;
   if (entity >= ENTITIES) {
@@ -212,6 +214,17 @@ void entity_anim() {
   }
   im2_free = 1;
   zx_border(INK_WHITE);
+}
+
+void entity_collision() {
+  unsigned char e = 1;
+  // Todos
+  while (e < ENTITIES) {
+    if (abs(cols[e] - cols[0]) <= 2 && abs(lins[e] - lins[0]) <= 16) {
+      zx_border(INK_RED);
+    }
+    ++e;
+  }
 }
 /*
  * Function:  entity_init
@@ -228,7 +241,12 @@ void entity_init() {
     // dirs[entity] = BIT_LEFT;
     cols[entity] = (entity * 4) - 2;
     lins[entity] = 32;
-    tiles[entity] = BTILE_BALLON;
+    if (entity < 5) {
+      tiles[entity] = BTILE_BALLON;
+    } else {
+      tiles[entity] = BTILE_BALLON2;
+    }
+
     frames[entity] = 2;
     ++entity;
   }
@@ -376,6 +394,7 @@ void entity_move_ballon() {
       btile_half_h(1, tiles[entity] + *frame, *lin, 30);
       return;
     }
+
     // Normal
     draw();
   } else {
@@ -535,8 +554,8 @@ void map_create() {
         screen[i] = BLOCK_SOLID;
       }
       // Ladrillos al Azar
-      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
-        // if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
+      // if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
+      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
         screen[i] = BLOCK_BRICK;
       }
 
@@ -587,7 +606,6 @@ void map_scroll(unsigned char d) {
   case BIT_RIGHT:
     /* code */
     if (scroll_min < 64) {
-      bomb_scroll(8);
       scroll_min += 16;
       map_update();
     }
@@ -595,7 +613,6 @@ void map_scroll(unsigned char d) {
   case BIT_LEFT:
     /* code */
     if (scroll_min > 0) {
-      bomb_scroll(-8);
       scroll_min -= 16;
       map_update();
     }
@@ -870,7 +887,9 @@ void bomb_explode(unsigned char b) {
     // Animación Explosion
     bombf[b] = BOMB_EXPLODE1;
     explode_draw(b, 0);
+    // Explota
     explode_explode(b);
+    NIRVANAP_halt();
     beepSteve(12);
     explode_paint(b, attrs_fire_yellow);
     explode_paint(b, attrs_fire_red);
@@ -994,23 +1013,6 @@ void explode_paint(unsigned char b, unsigned char *a) {
     i += 2;
   }
   im2_pause = 0;
-}
-
-/*
- * Function:  bomb_scroll
- * --------------------
- * Mueve bombas al hacer scroll
- *
- */
-void bomb_scroll(signed char s) {
-  unsigned char b;
-  b = 0;
-  while (b < MAX_BOMBS) {
-    if (bombf[b] != BOMB_EXPLODE) {
-      bomb_col[b] = bomb_col[b] - (s << 1); //*2
-    }
-    ++b;
-  }
 }
 
 /*
