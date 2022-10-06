@@ -95,6 +95,7 @@ udk_t k1;
 #define SFX_BOMB_ADD 10
 #define SFX_BOMB_EXPLO 12
 #define SFX_BOMB_STEP 14
+#define SFX_BAD_STEP 2
 
 // Entidades
 #define ENT_PLAYER 0
@@ -106,6 +107,8 @@ udk_t k1;
 #define ENT_GHOST 6
 #define ENT_BEAR 7
 #define ENT_COIN 8
+#define ENT_ACTIVE 128
+
 #define ENT_EXPLODING 253
 #define ENT_DIE 254
 #define ENT_OFF 255
@@ -192,7 +195,8 @@ unsigned char arr_fire_yellow[4] = {
 // Bombas
 unsigned char bomb_col[MAX_BOMBS];
 unsigned char bomb_lin[MAX_BOMBS];
-unsigned char bombf[MAX_BOMBS];
+unsigned char bomb_frame[MAX_BOMBS];
+unsigned int bomb_timer[MAX_BOMBS];
 unsigned char bomb;
 
 // Explosiones
@@ -211,6 +215,7 @@ unsigned char player_radius;
 unsigned char player_bombs;
 unsigned char player_ghost;
 unsigned char player_hit;
+unsigned char player_sound;
 
 unsigned char im2_pause = 1;
 unsigned char im2_free = 1;
@@ -261,17 +266,16 @@ void bomb_init();
 unsigned char bomb_get();
 void bomb_add();
 void bomb_anim();
-void bomb_explode(unsigned char b);
+void explode_anim(unsigned char b);
 void bomb_activate(unsigned char l, unsigned char c);
 
 // Explosiones
 void explode_draw(unsigned char b, unsigned char p);
 void explode_paint(unsigned char b, unsigned char *a);
-void explode_explode(unsigned char b);
+void explode_edges(unsigned char b);
 void explode_kill(unsigned char b);
 void explode_cell(unsigned char b, unsigned char l, unsigned char c);
 void explode_check();
-void explode_restore(unsigned char b);
 
 /*
 ************************************************************
