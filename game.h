@@ -266,12 +266,12 @@ void move_fire();
 
 // Mapas
 unsigned int map_calc(unsigned char l, unsigned char c);
+unsigned char map_cexplode(unsigned char l, unsigned char c);
 unsigned char map_get(unsigned char l, unsigned char c);
 void map_set(unsigned char v, unsigned char l, unsigned char c);
 void map_restore(unsigned char l, unsigned char c);
 unsigned char map_empty(unsigned char l, unsigned char c);
 void map_scroll(unsigned char d);
-void map_update();
 
 // Entities
 void entity_move_ballon();

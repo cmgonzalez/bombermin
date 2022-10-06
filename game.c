@@ -393,7 +393,7 @@ void entity_move_player() {
   if (inp & IN_STICK_LEFT) {
     dirs[0] = BIT_LEFT;
     move_left();
-    if ((*col - scroll_min) <= 8) {
+    if ((scroll_min > 0) && (*col - scroll_min) <= 8) {
       // Desplaza Mapa a la Izquierda
       map_scroll(BIT_LEFT);
     }
@@ -404,7 +404,7 @@ void entity_move_player() {
   if (inp & IN_STICK_RIGHT) {
     dirs[0] = BIT_RIGHT;
     move_right();
-    if ((*col - scroll_min) >= 24) {
+    if ((scroll_min < 64) && (*col - scroll_min) >= 24) {
       // Desplaza Mapa a la Derecha
       map_scroll(BIT_RIGHT);
     }
@@ -739,36 +739,44 @@ void map_scroll(unsigned char d) {
 
   switch (d) {
   case BIT_RIGHT:
-    /* code */
-    if (scroll_min < 64) {
-      scroll_min += 16;
-      map_update();
-    }
+    scroll_min += 16;
     break;
   case BIT_LEFT:
-    /* code */
-    if (scroll_min > 0) {
-      scroll_min -= 16;
-      map_update();
-    }
+    scroll_min -= 16;
     break;
   }
-
-  scroll_max = scroll_min + 32;
-  // Descomprime y Dibuja la habitación
-}
-
-void map_update() {
+  // re dibuja la pantalla considerando el scroll
   intrinsic_di();
   memset((void *)(22528 + 32), PAPER_GREEN | INK_GREEN, (768 - 64));
   map_draw();
   intrinsic_ei();
+  scroll_max = scroll_min + 32;
 }
 
+/*
+ * Function:  map_calc
+ * --------------------
+ * calcula un indice del mapa a partir de las coordenadas l,c , la columna es
+ * relativa al mapa no la pantalla.
+ */
 unsigned int map_calc(unsigned char l, unsigned char c) {
   return ((l - 16 >> 4) * MAP_WIDTH) + (c >> 1);
 }
 
+/*
+ * Function:  map_cexplode
+ * --------------------
+ * Retorna si un bloque en l, c puede explotarse
+ */
+unsigned char map_cexplode(unsigned char l, unsigned char c) {
+  unsigned char v;
+  v = map_get(l, c);
+  if (v == BLOCK_EMPTY || v == BLOCK_BRICK || v == BLOCK_BOMB) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 /*
  * Function:  map_get
  * --------------------
@@ -966,6 +974,7 @@ void bomb_anim() {
  *
  */
 void explode_anim(unsigned char b) {
+  unsigned char t;
 
   switch (bomb_frame[b]) {
   case BOMB_EXPLODE:
@@ -981,45 +990,45 @@ void explode_anim(unsigned char b) {
     // Calcula margenes
 
     // Margen Abajo Tope 160
-    foo = bomb_lin[b] + (player_radius << 4); //(player_radius * 16);
-    if (foo > 160) {
-      foo = 160;
+    t = bomb_lin[b] + (player_radius << 4); //(player_radius * 16);
+    if (t > 160) {
+      t = 160;
     }
-    while (explo_down[b] < foo &&
-           map_get(explo_down[b] + 16, bomb_col[b]) == BLOCK_EMPTY) {
+    while (explo_down[b] < t && //
+           map_cexplode(explo_down[b] + 16, bomb_col[b])) {
       explo_down[b] += 16;
     }
 
     // Margen Arriba Tope 8
-    foo = bomb_lin[b] - (player_radius << 4); //(player_radius * 16);
-    if (foo > 160) {
+    t = bomb_lin[b] - (player_radius << 4); //(player_radius * 16);
+    if (t > 160) {
       // Overflow
-      foo = 8;
+      t = 8;
     }
-    while (explo_up[b] > foo &&
-           map_get(explo_up[b] - 16, bomb_col[b]) == BLOCK_EMPTY) {
+    while (explo_up[b] > t && //
+           map_cexplode(explo_up[b] - 16, bomb_col[b])) {
       explo_up[b] -= 16;
     }
 
     // Margen Izquierda Tope 2
-    foo = bomb_col[b] - (player_radius << 1); //(player_radius * 2);
-    if (foo > 96) {                           // MAP_WIDTH*2
+    t = bomb_col[b] - (player_radius << 1); //(player_radius * 2);
+    if (t > 96) {                           // MAP_WIDTH*2
       // Overflow
-      foo = 2;
+      t = 2;
     }
-    while (explo_left[b] > foo &&
-           map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
+    while (explo_left[b] > t && //
+           map_cexplode(bomb_lin[b], explo_left[b] - 2)) {
       explo_left[b] -= 2;
     }
 
     // Margen Derecha Tope ??
-    foo = bomb_col[b] + (player_radius << 1); //(player_radius * 2);
-    // if (foo > 30) {
+    t = bomb_col[b] + (player_radius << 1); //(player_radius * 2);
+    // if (t > 30) {
     //   // Overflow
-    //   foo = 30;
+    //   t = 30;
     // }
-    while (explo_right[b] < foo &&
-           map_get(bomb_lin[b], explo_right[b] + 2) == BLOCK_EMPTY) {
+    while (explo_right[b] < t && //
+           map_cexplode(bomb_lin[b], explo_right[b] + 2)) {
       explo_right[b] += 2;
     }
     // Fijo Siguiente Estado
@@ -1098,10 +1107,20 @@ void explode_kill(unsigned char b) {
   }
 }
 void explode_edges(unsigned char b) {
-  explode_cell(b, explo_up[b] - 16, bomb_col[b]);
-  explode_cell(b, explo_down[b] + 16, bomb_col[b]);
-  explode_cell(b, bomb_lin[b], explo_left[b] - 2);
-  explode_cell(b, bomb_lin[b], explo_right[b] + 2);
+  if ((bomb_lin[b] - (player_radius << 4)) <= explo_up[b]) {
+    explode_cell(b, explo_up[b], bomb_col[b]);
+  }
+  if ((bomb_lin[b] + (player_radius << 4)) >= explo_down[b]) {
+    explode_cell(b, explo_down[b], bomb_col[b]);
+  }
+
+  if ((bomb_col[b] + (player_radius << 1)) <= explo_left[b]) {
+    explode_cell(b, bomb_lin[b], explo_left[b]);
+  }
+
+  if ((bomb_col[b] + (player_radius << 1)) >= explo_right[b]) {
+    explode_cell(b, bomb_lin[b], explo_right[b]);
+  }
 }
 
 void explode_cell(unsigned char b, unsigned char l, unsigned char c) {
@@ -1109,9 +1128,10 @@ void explode_cell(unsigned char b, unsigned char l, unsigned char c) {
   case BLOCK_BRICK:
     // Explota los ladrillos
     if (bomb_frame[b] >= BOMB_EXPLODE3) {
-      btile_draw_halt(BTILE_BRICK_EXP + (BOMB_EXPLODE1 - bomb_frame[b]), // Tile
-                      l,             // Linea
-                      c - scroll_min // Columna
+      btile_draw_halt(                                       //
+          BTILE_BRICK_EXP + (BOMB_EXPLODE1 - bomb_frame[b]), // Tile
+          l,                                                 // Linea
+          c - scroll_min                                     // Columna
       );
     } else {
       btile_draw_halt(BTILE_EMPTY, l, c - scroll_min);
@@ -1135,11 +1155,14 @@ void explode_draw(unsigned char b, unsigned char p) {
   i = explo_down[b];
   j = 0;
   NIRVANAP_halt();
+  // Centro Explosión
   btile_draw(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b] - scroll_min);
   if (i == bomb_lin[b]) {
     i -= 16;
   }
-  while (i >= explo_up[b]) {
+  // Explosión Vertical
+  while (i >= explo_up[b] &&
+         map_get(i, bomb_col[b] - scroll_min) == BLOCK_EMPTY) {
     if (!(j & 3)) {
       NIRVANAP_halt();
     }
@@ -1150,12 +1173,13 @@ void explode_draw(unsigned char b, unsigned char p) {
       i -= 16;
     }
   }
-  // Horizontal
+  // Explosión Horizontal
   i = explo_left[b];
   if (i == bomb_col[b]) {
     i += 2;
   }
-  while (i <= explo_right[b]) {
+  while (i <= explo_right[b] &&
+         map_get(bomb_lin[b], i - scroll_min) == BLOCK_EMPTY) {
     if (!(j & 3)) {
       NIRVANAP_halt();
     }
@@ -1167,18 +1191,27 @@ void explode_draw(unsigned char b, unsigned char p) {
     }
   }
   if (p == 0) {
-    // Bordes de explosion
-    if (explo_right[b] != bomb_col[b])
+    // Bordes de explosion solo para el primer dibujado
+    // Derecha
+    if (map_get(bomb_lin[b], explo_right[b] + 1 - scroll_min) == BLOCK_EMPTY) {
       btile_half_h(0, BTILE_END_EXP, bomb_lin[b],
                    explo_right[b] + 1 - scroll_min);
-    if (explo_left[b] != bomb_col[b])
+    }
+    // Izquierda
+    if (map_get(bomb_lin[b], explo_left[b] - 1 - scroll_min) == BLOCK_EMPTY) {
       btile_half_h(1, BTILE_END_EXP, bomb_lin[b],
                    explo_left[b] - 1 - scroll_min);
-    if (explo_up[b] != bomb_lin[b])
+    }
+    // Arriba
+    if (map_get(explo_up[b], bomb_col[b] - scroll_min) == BLOCK_EMPTY) {
+
       btile_half_v(0, BTILE_END_EXP, explo_up[b], bomb_col[b] - scroll_min);
-    if (explo_down[b] != bomb_lin[b])
+    }
+    // Abajo
+    if (map_get(explo_down[b] + 8, bomb_col[b] - scroll_min) == BLOCK_EMPTY) {
       btile_half_v(1, BTILE_END_EXP, explo_down[b] + 8,
                    bomb_col[b] - scroll_min);
+    }
   }
   im2_pause = 0;
 }
