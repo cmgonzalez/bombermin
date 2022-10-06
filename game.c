@@ -228,7 +228,7 @@ void entity_anim() {
   } else {
     entity = entity_getnext(); // entity_im2;
   }
-  if (time >= timers[entity]) {
+  if (time >= timers[entity] && types[entity] != ENT_OFF) {
     frame = &frames[entity];
     col = &cols[entity];
     lin = &lins[entity];
@@ -244,8 +244,24 @@ void entity_anim() {
     case ENT_BEAKER:
       entity_move_ballon();
       break;
+    case ENT_EXPLODING:
+      draw();
+      ++*frame;
+      if (*frame == 5) {
+        // Elimina entidad
+        types[entity] = ENT_OFF;
+        map_restore(lin0, col0);
+      } else {
+        timers[entity] = time + 5;
+      }
+      break;
     case ENT_DIE:
       draw();
+      types[entity] = ENT_EXPLODING;
+      tiles[entity] = BTILE_DIE;
+      timers[entity] = time + 30;
+      frames[entity] = 4;
+      *frame = 0;
       break;
     default:
       // frame_inc();
@@ -258,9 +274,6 @@ void entity_anim() {
     // if (entity_im2 >= ENTITIES) {
     //   entity_im2 = 1;
     // }
-    if (entity) {
-      timers[entity] = time + 10;
-    }
   }
 
   im2_free = 1;
@@ -473,6 +486,7 @@ void entity_move_ballon() {
 
     // Normal
     draw();
+    timers[entity] = time + 10;
   }
 }
 

@@ -105,6 +105,7 @@ udk_t k1;
 #define ENT_GHOST 6
 #define ENT_BEAR 7
 #define ENT_COIN 8
+#define ENT_EXPLODING 253
 #define ENT_DIE 254
 #define ENT_OFF 255
 
