@@ -25,7 +25,7 @@
  */
 
 void main(void) {
-  z80_delay_ms(250);
+  // z80_delay_ms(250);
   // in_wait_key();
   // in_wait_nokey();
 
@@ -43,12 +43,9 @@ void main(void) {
   printPaper(INK_WHITE);
   printInk(INK_BLACK);
   printAt(0, 12);
-  printf("Bombermin");
+  // printf("Bombermin");
   printAt(23, 14);
   printf("Demo");
-
-  // Inicializa las entidades
-  entity_init();
 
   // Configura direcciones para los btiles y blocks(UDGs)
   NIRVANAP_tiles(_btiles);
@@ -60,30 +57,50 @@ void main(void) {
 
   // Extrae Habitación 0
 
-  scroll_min = 0;
-  scroll_max = 31;
-
-  bomb = 0;
-  map_create();
-  bomb_init();
-  map_draw();
-  // Activa NIRVANA ENGINE
-  NIRVANAP_start();
   // Enlaza la función "im2"  con la interrupción IM2 de Nirvana
   NIRVANAP_ISR_HOOK[0] = 205;
   z80_wpoke(&NIRVANAP_ISR_HOOK[1], (unsigned int)im2);
-
   // Atributos de fondo para pintar al limpiar
   attrs_back = &arr_back[0];
   attrs_fire_red = &arr_fire_red[0];
   attrs_fire_yellow = &arr_fire_yellow[0];
 
-  player_radius = 3;
-
   // Bucle principal del Juego
   entity = 0;
+  bomb = 0;
+  game_entities = 0;
+  // Valores iniciales de la Partida
+  player_lives = PLAYER_LIVES;
+  player_radius = 1;
+  player_bombs = 1;
+  player_bomb_walk = 0;
+  player_brick_walk = 0;
+  player_speed = PLAYER_NORMAL;
+  player_hit = 0;
+  game_stage = 1;
+  game_time = 200;
+  // Inicializa las entidades
+  entity_init();
+  // Pantalla
+  printAt(0, 1);
+  printf("TIME");
+  printAt(0, 24);
+  printf("LEFT");
+  // Crea Mapa
+  map_create();
+  // Inicializa Bombas
+  bomb_init();
+  // Dibuja el mapa
+  map_draw();
+  // Activa NIRVANA ENGINE
+  NIRVANAP_start();
+  // Activa rutinas im2
   im2_pause = 0;
   for (;;) {
+    print_char(game_time, 0, 6);
+    print_char(game_score, 0, 16);
+    printAt(0, 28);
+    printf("%2i", player_lives);
     // Anima Bombas
     bomb_anim();
     // Explota Bombas
@@ -251,11 +268,14 @@ unsigned char entity_getnext() {
 void entity_anim() {
   im2_free = 0;
 
-  if ((time & 3) == 0) {
+  if ((time & 7) == 0) {
+    // cada 4 frames se mueve el player
     entity = 0;
   } else {
+    // Busco siguiente entidad para
     entity = entity_getnext(); // entity_im2;
   }
+
   if (time >= timers[entity] && types[entity] != ENT_OFF) {
     frame = &frames[entity];
     col = &cols[entity];
@@ -284,24 +304,20 @@ void entity_anim() {
       }
       break;
     case ENT_DIE:
-      draw();
-      types[entity] = ENT_EXPLODING;
-      tiles[entity] = BTILE_DIE;
-      timers[entity] = time + 30;
-      frames[entity] = 4;
-      *frame = 0;
-      break;
+      btile_draw(tiles[entity] + 3, *lin, *col - scroll_min);
+      timers[entity] = time;
+      --values[entity];
+      if (values[entity] == 0) {
+        types[entity] = ENT_EXPLODING;
+        tiles[entity] = BTILE_DIE;
+        break;
+      }
     default:
-      // frame_inc();
-      // draw();
-      entity_move_ballon();
+      frame_inc();
+      draw();
+      // entity_move_ballon();
       break;
     }
-
-    // ++entity_im2;
-    // if (entity_im2 >= ENTITIES) {
-    //   entity_im2 = 1;
-    // }
   }
 
   im2_free = 1;
@@ -337,8 +353,11 @@ void entity_init() {
     // dirs[entity] = BIT_LEFT;
     cols[entity] = 2 + (entity * 2); // (entity * 4) - 2;
     lins[entity] = 32;
-    types[entity] = 1 + (entity % 8);
-    tiles[entity] = BTILE_BALLON + (4 * ((entity - 1) % 8));
+
+    // types[entity] = 1 + (entity % 8);
+    // tiles[entity] = BTILE_BALLON + (4 * ((entity - 1) % 8));
+    types[entity] = 1;
+    tiles[entity] = BTILE_BALLON;
     frames[entity] = 2;
     ++entity;
   }
@@ -348,6 +367,9 @@ void entity_init() {
   lins[0] = 32;
   dirs[0] = BIT_RIGHT;
   tiles[0] = BTILE_PLAYER_HOR;
+  // Valores iniciales para el control del scroll
+  scroll_min = 0;
+  scroll_max = 31;
 }
 /*
  * Function:  entity_move_player
@@ -364,8 +386,8 @@ void entity_move_player() {
 
   if (inp & IN_STICK_FIRE) {
     bomb_add();
-    frame_inc();
-    draw();
+    // frame_inc();
+    // draw();
     return;
   }
   if (inp & IN_STICK_LEFT) {
@@ -527,7 +549,7 @@ void entity_chdir() {
 /*
  * Function:  entity_die
  * --------------------
- * Setea una entidad en agonizante
+ * Fija una entidad en agonizante
  *
  */
 void entity_die(unsigned char e) {
@@ -535,7 +557,10 @@ void entity_die(unsigned char e) {
   if (e) {
     // Enemigo
     types[e] = ENT_DIE;
-    frames[e] = 3;
+    btile_draw_halt(tiles[entity] + 3, *lin, *col - scroll_min);
+    timers[e] = time;
+    values[e] = 3;
+    ++game_score;
   } else {
     // Player
   }
@@ -664,8 +689,8 @@ void map_create() {
         screen[i] = BLOCK_SOLID;
       }
       // Ladrillos al Azar
-      // if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
-      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
+      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
+        //      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2)
         screen[i] = BLOCK_BRICK;
       }
 
@@ -841,6 +866,13 @@ unsigned char move_bloc_col(unsigned char c) {
 void im2() {
   // Aumenta "Reloj"
   ++time;
+  // Contador de Segundos
+  ++time_sec;
+  if (time_sec == 50) {
+    --game_time;
+    time_sec = 0;
+  }
+  // Animación entidades
   if (im2_free && !im2_pause) {
     entity_anim();
   }
@@ -896,12 +928,12 @@ void bomb_add() {
     b = bomb_get();
     // Seteo la bomba
     if (b < MAX_BOMBS) {
-      bomb_frame[b] = BOMB_FRAMES;
+      map_set(BLOCK_BOMB, l, c);
+      // player_sound = SFX_BOMB_ADD;
       bomb_lin[b] = l;
       bomb_col[b] = c;
       bomb_timer[b] = time + 200;
-      player_sound = SFX_BOMB_ADD;
-      map_set(BLOCK_BOMB, l, c);
+      bomb_frame[b] = BOMB_FRAMES;
     }
   }
 }
@@ -920,6 +952,7 @@ void bomb_anim() {
       // Animación Bomba
       sprite_draw(b, BTILE_BOMB + (bomb_frame[b] % 3), bomb_lin[b],
                   bomb_col[b] - scroll_min);
+
       --bomb_frame[b];
     }
     ++b;
@@ -991,6 +1024,8 @@ void explode_anim(unsigned char b) {
     }
     // Fijo Siguiente Estado
     bomb_frame[b] = BOMB_EXPLODE1;
+    // Mata
+    explode_kill(b);
     // Dibuja
     explode_draw(b, 0);
     // Explota Bordes
@@ -999,28 +1034,26 @@ void explode_anim(unsigned char b) {
     beepSteve(SFX_BOMB_EXPLO);
     explode_paint(b, attrs_fire_yellow);
     explode_paint(b, attrs_fire_red);
-    // Mata
-    explode_kill(b);
     break;
   case BOMB_EXPLODE1:
     // Fijo Siguiente Estado
     bomb_frame[b] = BOMB_EXPLODE2;
+    // Mata
+    explode_kill(b);
     // Dibuja
     explode_draw(b, 8);
     // Explota Bordes
     explode_edges(b);
-    // Mata
-    explode_kill(b);
     break;
   case BOMB_EXPLODE2:
     // Fijo Siguiente Estado
     bomb_frame[b] = BOMB_EXPLODE3;
+    // Mata
+    explode_kill(b);
     // Dibuja
     explode_draw(b, 16);
     // Explota Bordes
     explode_edges(b);
-    // Mata
-    explode_kill(b);
     // Siguiente Animación
     break;
   case BOMB_EXPLODE3:

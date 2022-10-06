@@ -42,7 +42,7 @@ udk_t k1;
 #define BLOCK_SOLID 1
 #define BLOCK_BRICK 2
 #define BLOCK_OUT 3
-#define BLOCK_BOMB 255
+#define BLOCK_BOMB 27
 
 // Bombas
 #define BOMB_FRAMES 10
@@ -109,6 +109,11 @@ udk_t k1;
 #define ENT_COIN 8
 #define ENT_ACTIVE 128
 
+// Player
+#define PLAYER_LIVES 3
+#define PLAYER_FAST 3
+#define PLAYER_NORMAL 7
+
 #define ENT_EXPLODING 253
 #define ENT_DIE 254
 #define ENT_OFF 255
@@ -128,6 +133,7 @@ udk_t k1;
 
 // Uso general
 unsigned int time;
+unsigned char time_sec;
 unsigned char *addr;
 unsigned char foo;
 unsigned char fanim;
@@ -160,6 +166,7 @@ unsigned int timers[ENTITIES];
 unsigned char tiles[ENTITIES];
 
 unsigned char frames[ENTITIES];
+unsigned char values[ENTITIES];
 
 // Mapa de Pantalla
 unsigned char screen[MAP_SIZE];
@@ -211,12 +218,22 @@ unsigned char explo_cl[MAX_BOMBS];
 unsigned char explo_cr[MAX_BOMBS];
 
 // Valores del Player
+unsigned char player_lives;
 unsigned char player_radius;
 unsigned char player_bombs;
-unsigned char player_ghost;
+unsigned char player_bomb_walk;
+unsigned char player_brick_walk;
+unsigned char player_speed;
 unsigned char player_hit;
 unsigned char player_sound;
 
+// Valores del Juego
+unsigned char game_entities;
+unsigned int game_score;
+unsigned char game_stage;
+unsigned char game_time;
+
+// Valores para controla el dibujado en im2
 unsigned char im2_pause = 1;
 unsigned char im2_free = 1;
 unsigned char in_explo;

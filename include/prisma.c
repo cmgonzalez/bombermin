@@ -291,7 +291,7 @@ void btile_paint(unsigned char *a, unsigned char l, unsigned char c) {
 void sprite_draw(unsigned char s, unsigned char t, unsigned char l,
                  unsigned char c) {
   if (l < 192 && c < 31) {
-    // Dibuja un sprite nirvana en el proximo frame
+    // Dibuja un sprite nirvana en el próximo frame
     NIRVANAP_spriteT(s, t, l, c);
   }
 }
