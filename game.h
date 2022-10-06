@@ -55,8 +55,9 @@ udk_t k1;
 // Btiles asociados a las entidades
 #define BTILE_EMPTY 0
 #define BTILE_EXPLO 24
-#define BTILE_BOMB 29
+#define BTILE_BOMB 27
 #define BTILE_BRICK_EXP 37
+#define BTILE_END_EXP 5
 
 #define BTILE_PLAYER_HOR 8
 #define BTILE_PLAYER_VER 16
@@ -91,7 +92,7 @@ udk_t k1;
 #define BIT_DEAD 128
 
 // sfx
-#define SFX_BOMB_ADD 2
+#define SFX_BOMB_ADD 10
 #define SFX_BOMB_EXPLO 12
 #define SFX_BOMB_STEP 14
 

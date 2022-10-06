@@ -78,7 +78,7 @@ void main(void) {
   attrs_fire_red = &arr_fire_red[0];
   attrs_fire_yellow = &arr_fire_yellow[0];
 
-  player_radius = 5;
+  player_radius = 3;
 
   // Bucle principal del Juego
   entity = 0;
@@ -95,6 +95,19 @@ void main(void) {
     if (player_hit) {
       beepSteve(9);
       player_hit = 0;
+    }
+    // Debug al apretar el Enter
+    if (in_inkey() == 13) {
+      printAt(0, 6);
+      printf("L%3iC%3i", *lin, *col);
+      z80_delay_ms(50);
+      print_char(sfx, 1, 0);
+      beepSteve(sfx);
+
+      ++sfx;
+      if (sfx > 16) {
+        sfx = 1;
+      }
     }
   }
 }
@@ -329,19 +342,7 @@ void entity_init() {
  */
 void entity_move_player() {
   unsigned inp;
-  // Debug al apretar el Enter
-  if (in_inkey() == 13) {
-    printAt(0, 6);
-    printf("L%3iC%3i", *lin, *col);
-    z80_delay_ms(50);
-    print_char(sfx, 1, 0);
-    beepSteve(sfx);
 
-    ++sfx;
-    if (sfx > 16) {
-      sfx = 1;
-    }
-  }
   // Fijo la próxima llamada en 5 frames, TODO ponerla al final...
 
   inp = (joyfunc1)(&k1);
@@ -486,7 +487,7 @@ void entity_move_ballon() {
 
     // Normal
     draw();
-    timers[entity] = time + 10;
+    timers[entity] = time + 5;
   }
 }
 
@@ -887,9 +888,9 @@ void bomb_add() {
   b = bomb_get();
   // Seteo la bomba
   if (b < MAX_BOMBS) {
+    bombf[b] = BOMB_FRAMES;
     bomb_lin[b] = l;
     bomb_col[b] = c;
-    bombf[b] = BOMB_FRAMES;
     map_set(BLOCK_BOMB, l, c);
   }
 }
@@ -905,14 +906,14 @@ void bomb_anim() {
   b = 0;
   while (b < MAX_BOMBS) {
     if (bombf[b] < BOMB_OFF) {
-
+      // Sonido
+      if (bombf[b] == BOMB_FRAMES) {
+        beepSteve(SFX_BOMB_ADD);
+      }
       // Animación Bomba
       sprite_draw(b, BTILE_BOMB + (bombf[b] % 3), bomb_lin[b],
                   bomb_col[b] - scroll_min);
       --bombf[b];
-      if (bombf[b] == BOMB_FRAMES) {
-        beepSteve(SFX_BOMB_ADD);
-      }
     }
     ++b;
   }
@@ -963,10 +964,10 @@ void bomb_explode(unsigned char b) {
 
     // Izquierda Tope 2
     foo = bomb_col[b] - (player_radius << 1); //(player_radius * 2);
-    // if (foo > 30) {
-    //   // Overflow
-    //   foo = 2;
-    // }
+    if (foo > 96) {                           // MAP_WIDTH*2
+      // Overflow
+      foo = 2;
+    }
     while (explo_left[b] > foo &&
            map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
       explo_left[b] -= 2;
@@ -998,11 +999,13 @@ void bomb_explode(unsigned char b) {
     bombf[b] = BOMB_EXPLODE2;
     explode_draw(b, 8);
     explode_explode(b);
+    explode_kill(b);
     break;
   case BOMB_EXPLODE2:
     bombf[b] = BOMB_EXPLODE3;
     explode_draw(b, 16);
     explode_explode(b);
+    explode_kill(b);
     break;
   case BOMB_EXPLODE3:
     // Restauro
@@ -1028,14 +1031,14 @@ void explode_kill(unsigned char b) {
   // Todos
   while (e < ENTITIES) {
     if (types[e] < ENT_DIE) {
-      if ((explo_left[b] < cols[e]) &&      //
-          (explo_right[b] > cols[e]) &&     //
+      if ((explo_left[b] <= cols[e]) &&     //
+          (explo_right[b] >= cols[e]) &&    //
           (abs(bomb_lin[b] - lins[e]) < 16) //
       ) {
         entity_die(e);
       }
-      if ((explo_up[b] < lins[e]) &&       //
-          (explo_down[b] > lins[e]) &&     //
+      if ((explo_up[b] <= lins[e]) &&      //
+          (explo_down[b] >= lins[e]) &&    //
           (abs(bomb_col[b] - cols[e]) < 2) //
       ) {
         entity_die(e);
@@ -1110,6 +1113,17 @@ void explode_draw(unsigned char b, unsigned char p) {
     if (i == bomb_col[b]) {
       i += 2;
     }
+  }
+  if (p == 0) {
+    // Bordes de explosion
+    if (explo_right[b] != bomb_col[b])
+      btile_half_h(0, BTILE_END_EXP, bomb_lin[b], explo_right[b] + 1);
+    if (explo_left[b] != bomb_col[b])
+      btile_half_h(1, BTILE_END_EXP, bomb_lin[b], explo_left[b] - 1);
+    if (explo_up[b] != bomb_lin[b])
+      btile_half_v(0, BTILE_END_EXP, explo_up[b], bomb_col[b]);
+    if (explo_down[b] != bomb_lin[b])
+      btile_half_v(1, BTILE_END_EXP, explo_down[b] + 8, bomb_col[b]);
   }
   im2_pause = 0;
 }
