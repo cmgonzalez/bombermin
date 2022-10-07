@@ -212,6 +212,11 @@ unsigned char explo_down[MAX_BOMBS];
 unsigned char explo_left[MAX_BOMBS];
 unsigned char explo_right[MAX_BOMBS];
 
+unsigned char explo_max_up[MAX_BOMBS];
+unsigned char explo_max_down[MAX_BOMBS];
+unsigned char explo_max_left[MAX_BOMBS];
+unsigned char explo_max_right[MAX_BOMBS];
+
 unsigned char explo_cu[MAX_BOMBS];
 unsigned char explo_cd[MAX_BOMBS];
 unsigned char explo_cl[MAX_BOMBS];
@@ -266,7 +271,6 @@ void move_fire();
 
 // Mapas
 unsigned int map_calc(unsigned char l, unsigned char c);
-unsigned char map_cexplode(unsigned char l, unsigned char c);
 unsigned char map_get(unsigned char l, unsigned char c);
 void map_set(unsigned char v, unsigned char l, unsigned char c);
 void map_restore(unsigned char l, unsigned char c);
