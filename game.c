@@ -71,7 +71,7 @@ void main(void) {
   game_entities = 0;
   // Valores iniciales de la Partida
   player_lives = PLAYER_LIVES;
-  player_radius = 1;
+  player_radius = 2;
   player_bombs = 1;
   player_bomb_walk = 0;
   player_brick_walk = 0;
@@ -82,10 +82,9 @@ void main(void) {
   // Inicializa las entidades
   entity_init();
   // Pantalla
-  printAt(0, 1);
-  printf("TIME");
-  printAt(0, 24);
-  printf("LEFT");
+  print_header();
+  print_score();
+  print_lives();
   // Crea Mapa
   map_create();
   // Inicializa Bombas
@@ -97,10 +96,8 @@ void main(void) {
   // Activa rutinas im2
   im2_pause = 0;
   for (;;) {
-    print_char(game_time, 0, 6);
-    print_char(game_score, 0, 16);
-    printAt(0, 28);
-    printf("%2i", player_lives);
+    // Imprime el tiempo
+    print_time();
     // Anima Bombas
     bomb_anim();
     // Explota Bombas
@@ -772,7 +769,7 @@ unsigned char map_cexplode(unsigned char l, unsigned char c) {
   unsigned char v;
   v = map_get(l, c);
   if (v == BLOCK_EMPTY || v == BLOCK_BRICK || v == BLOCK_BOMB) {
-    return 1;
+    return 1 + v;
   } else {
     return 0;
   }
@@ -955,6 +952,9 @@ void bomb_add() {
 void bomb_anim() {
   unsigned char b;
   b = 0;
+  // Para prevenir que Nirvana dibuje incorrectamente si le pilla una
+  // interrupción
+  NIRVANAP_halt();
   while (b < MAX_BOMBS) {
     if (bomb_frame[b] < BOMB_OFF) {
       // Animación Bomba
@@ -974,7 +974,6 @@ void bomb_anim() {
  *
  */
 void explode_anim(unsigned char b) {
-  unsigned char t;
 
   switch (bomb_frame[b]) {
   case BOMB_EXPLODE:
@@ -982,55 +981,8 @@ void explode_anim(unsigned char b) {
     // Limpia sprite Nirvana de la bomba
     NIRVANAP_spriteT(b, 0, 0, 0);
 
-    // Parámetros iniciales de Explosión
-    explo_down[b] = bomb_lin[b];
-    explo_up[b] = bomb_lin[b];
-    explo_left[b] = bomb_col[b];
-    explo_right[b] = bomb_col[b];
-    // Calcula margenes
-
-    // Margen Abajo Tope 160
-    t = bomb_lin[b] + (player_radius << 4); //(player_radius * 16);
-    if (t > 160) {
-      t = 160;
-    }
-    while (explo_down[b] < t && //
-           map_cexplode(explo_down[b] + 16, bomb_col[b])) {
-      explo_down[b] += 16;
-    }
-
-    // Margen Arriba Tope 8
-    t = bomb_lin[b] - (player_radius << 4); //(player_radius * 16);
-    if (t > 160) {
-      // Overflow
-      t = 8;
-    }
-    while (explo_up[b] > t && //
-           map_cexplode(explo_up[b] - 16, bomb_col[b])) {
-      explo_up[b] -= 16;
-    }
-
-    // Margen Izquierda Tope 2
-    t = bomb_col[b] - (player_radius << 1); //(player_radius * 2);
-    if (t > 96) {                           // MAP_WIDTH*2
-      // Overflow
-      t = 2;
-    }
-    while (explo_left[b] > t && //
-           map_cexplode(bomb_lin[b], explo_left[b] - 2)) {
-      explo_left[b] -= 2;
-    }
-
-    // Margen Derecha Tope ??
-    t = bomb_col[b] + (player_radius << 1); //(player_radius * 2);
-    // if (t > 30) {
-    //   // Overflow
-    //   t = 30;
-    // }
-    while (explo_right[b] < t && //
-           map_cexplode(bomb_lin[b], explo_right[b] + 2)) {
-      explo_right[b] += 2;
-    }
+    // Calcula Explosión
+    explode_calc(b);
     // Fijo Siguiente Estado
     bomb_frame[b] = BOMB_EXPLODE1;
     // Mata
@@ -1041,8 +993,8 @@ void explode_anim(unsigned char b) {
     explode_edges(b);
     NIRVANAP_halt();
     beepSteve(SFX_BOMB_EXPLO);
-    explode_paint(b, attrs_fire_yellow);
-    explode_paint(b, attrs_fire_red);
+    // explode_paint(b, attrs_fire_yellow);
+    // explode_paint(b, attrs_fire_red);
     break;
   case BOMB_EXPLODE1:
     // Fijo Siguiente Estado
@@ -1122,7 +1074,91 @@ void explode_edges(unsigned char b) {
     explode_cell(b, bomb_lin[b], explo_right[b]);
   }
 }
+void explode_calc(unsigned char b) {
+  unsigned char v;
+  unsigned char t;
+  // Calcula margenes arriba, abajo, izquierda y derecha de la explosion
+  // Parámetros iniciales de Explosión
+  explo_down[b] = bomb_lin[b] + 16;
+  explo_up[b] = bomb_lin[b] - 16;
+  explo_left[b] = bomb_col[b] - 2;
+  explo_right[b] = bomb_col[b] + 2;
+  // Margen Abajo
+  t = bomb_lin[b] + (player_radius << 4);
+  // t = bomb_lin[b] + (player_radius * 16);
+  if (t > 160) {
+    // Máximo 160
+    t = 160;
+    explo_down[b] = 160;
+  }
+  while (explo_down[b] < t) {
+    v = map_get(explo_down[b], bomb_col[b]);
+    if (v == BLOCK_BRICK)
+      break;
 
+    if (v == BLOCK_SOLID || v == BLOCK_BOMB) {
+      explo_down[b] -= 16;
+      break;
+    }
+    explo_down[b] += 16;
+  }
+  // Margen Arriba
+  t = bomb_lin[b] - (player_radius << 4);
+  // t = bomb_lin[b] - (player_radius * 16);
+  if (t > 160 || t < 32) {
+    // Mínimo 8
+    t = 32;
+    explo_up[b] = 32;
+  }
+  while (explo_up[b] > t) {
+    v = map_get(explo_up[b], bomb_col[b]);
+    if (v == BLOCK_BRICK)
+      break;
+    if (v == BLOCK_SOLID || v == BLOCK_BOMB) {
+      explo_up[b] += 16;
+      break;
+    }
+    explo_up[b] -= 16;
+  }
+  // Margen Izquierda
+  t = bomb_col[b] - (player_radius << 1);
+  // t = bomb_col[b] - (player_radius * 2);
+  if (t > 96 || t < 2) { // MAP_WIDTH*2*3
+    // Mínimo
+    t = 2;
+    explo_left[b] = 2;
+  }
+  while (explo_left[b] > t) {
+    v = map_get(bomb_lin[b], explo_left[b]);
+    if (v == BLOCK_BRICK)
+      break;
+    if (v == BLOCK_SOLID || v == BLOCK_BOMB) {
+      explo_left[b] += 2;
+      break;
+    }
+    explo_left[b] -= 2;
+    v = map_get(bomb_lin[b], explo_left[b]);
+  }
+  // Margen Derecha
+  t = bomb_col[b] + (player_radius << 1);
+  // t = bomb_col[b] + (player_radius * 2);
+  if (t > 96) { // MAP_WIDTH*2*3
+    // Máximo
+    t = 96;
+    explo_right[b] = 96;
+  }
+
+  while (explo_right[b] < t) {
+    v = map_get(bomb_lin[b], explo_right[b]);
+    if (v == BLOCK_BRICK)
+      break;
+    if (v == BLOCK_SOLID || v == BLOCK_BOMB) {
+      explo_right[b] -= 2;
+      break;
+    }
+    explo_right[b] += 2;
+  }
+}
 void explode_cell(unsigned char b, unsigned char l, unsigned char c) {
   switch (screen[map_calc(l, c)]) {
   case BLOCK_BRICK:
@@ -1155,36 +1191,44 @@ void explode_draw(unsigned char b, unsigned char p) {
   i = explo_down[b];
   j = 0;
   NIRVANAP_halt();
-  // Centro Explosión
+  // Explosión Centro
   btile_draw(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b] - scroll_min);
-  if (i == bomb_lin[b]) {
-    i -= 16;
-  }
-  // Explosión Vertical
+
+  // Explosión Arriba
+  i = bomb_lin[b] - 16;
   while (i >= explo_up[b] &&
-         map_get(i, bomb_col[b] - scroll_min) == BLOCK_EMPTY) {
+         (map_get(i, bomb_col[b] - scroll_min) == BTILE_EMPTY)) {
     if (!(j & 3)) {
       NIRVANAP_halt();
     }
     ++j;
     btile_draw(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
     i -= 16;
-    if (i == bomb_lin[b]) {
-      i -= 16;
+  }
+  // Explosión Abajo
+  i = bomb_lin[b] + 16;
+  while (i <= explo_down[b] &&
+         (map_get(i, bomb_col[b] - scroll_min) == BTILE_EMPTY)) {
+    if (!(j & 3)) {
+      NIRVANAP_halt();
     }
+    ++j;
+    btile_draw(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
+    i += 16;
   }
   // Explosión Horizontal
   i = explo_left[b];
   if (i == bomb_col[b]) {
     i += 2;
   }
-  while (i <= explo_right[b] &&
-         map_get(bomb_lin[b], i - scroll_min) == BLOCK_EMPTY) {
+  while (i <= explo_right[b]) {
     if (!(j & 3)) {
       NIRVANAP_halt();
     }
     ++j;
-    btile_draw(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
+    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_BRICK) {
+      btile_draw(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
+    }
     i += 2;
     if (i == bomb_col[b]) {
       i += 2;
@@ -1204,7 +1248,6 @@ void explode_draw(unsigned char b, unsigned char p) {
     }
     // Arriba
     if (map_get(explo_up[b], bomb_col[b] - scroll_min) == BLOCK_EMPTY) {
-
       btile_half_v(0, BTILE_END_EXP, explo_up[b], bomb_col[b] - scroll_min);
     }
     // Abajo
@@ -1267,4 +1310,22 @@ void bomb_activate(unsigned char l, unsigned char c) {
     }
     ++b;
   }
+}
+void print_header() {
+  printAt(0, 1);
+  printf("TIME");
+  printAt(0, 24);
+  printf("LEFT");
+}
+void print_time() {
+  printAt(0, 6);
+  printf("%3i", game_time);
+}
+void print_score() {
+  printAt(0, 16);
+  printf("%2i", game_score);
+}
+void print_lives() {
+  printAt(0, 28);
+  printf("%2i", player_lives);
 }
