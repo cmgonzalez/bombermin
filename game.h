@@ -50,7 +50,7 @@ udk_t k1;
 #define BOMB_EXPLODE3 252
 #define BOMB_EXPLODE2 253
 #define BOMB_EXPLODE1 254
-#define BOMB_EXPLODE 255
+#define BOMB_INITIAL 255
 
 // Btiles asociados a las entidades
 #define BTILE_EMPTY 0
@@ -204,6 +204,7 @@ unsigned char bomb_col[MAX_BOMBS];
 unsigned char bomb_lin[MAX_BOMBS];
 unsigned char bomb_frame[MAX_BOMBS];
 unsigned int bomb_timer[MAX_BOMBS];
+unsigned int bomb_mode[MAX_BOMBS];
 unsigned char bomb;
 
 // Explosiones
@@ -217,10 +218,7 @@ unsigned char explo_max_down[MAX_BOMBS];
 unsigned char explo_max_left[MAX_BOMBS];
 unsigned char explo_max_right[MAX_BOMBS];
 
-unsigned char explo_cu[MAX_BOMBS];
-unsigned char explo_cd[MAX_BOMBS];
-unsigned char explo_cl[MAX_BOMBS];
-unsigned char explo_cr[MAX_BOMBS];
+unsigned char explo_trigger[MAX_BOMBS];
 
 // Valores del Player
 unsigned char player_lives;
@@ -288,7 +286,7 @@ unsigned char bomb_get();
 void bomb_add();
 void bomb_anim();
 void explode_anim(unsigned char b);
-void bomb_activate(unsigned char l, unsigned char c);
+void bomb_activate(unsigned char d, unsigned char l, unsigned char c);
 
 // Explosiones
 void explode_calc(unsigned char b);
@@ -296,8 +294,9 @@ void explode_draw(unsigned char b, unsigned char p);
 void explode_paint(unsigned char b, unsigned char *a);
 void explode_edges(unsigned char b);
 void explode_kill(unsigned char b);
-void explode_cell(unsigned char b, unsigned char l, unsigned char c);
-void explode_check();
+void explode_cell(unsigned char b, unsigned char d, unsigned char l,
+                  unsigned char c);
+void bomb_check();
 
 /*
 ************************************************************
