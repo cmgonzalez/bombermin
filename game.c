@@ -44,28 +44,37 @@ void main(void) {
   printInk(INK_BLACK);
   printAt(0, 12);
   // printf("Bombermin");
-  printAt(23, 14);
-  printf("Demo");
+  printAt(23, 8);
+  printf("Bombermin Demo");
 
   // Configura direcciones para los btiles y blocks(UDGs)
   NIRVANAP_tiles(_btiles);
   NIRVANAP_chars(_blocks);
 
   // Configura los Atributos por defecto de nirvana para print_udg_nirv
-  nirv_attribs[0] = nirv_attribs[1] = nirv_attribs[2] = nirv_attribs[3] =
-      PAPER_BLACK | INK_CYAN;
+  nirv_attribs[0] = nirv_attribs[1] = nirv_attribs[2] = nirv_attribs[3] = PAPER_BLACK | INK_CYAN;
 
   // Extrae Habitación 0
 
   // Enlaza la función "im2"  con la interrupción IM2 de Nirvana
   NIRVANAP_ISR_HOOK[0] = 205;
-  z80_wpoke(&NIRVANAP_ISR_HOOK[1], (unsigned int)im2);
+  z80_wpoke(&NIRVANAP_ISR_HOOK[1], (unsigned int)main_im2);
   // Atributos de fondo para pintar al limpiar
   attrs_back = &arr_back[0];
   attrs_fire_red = &arr_fire_red[0];
   attrs_fire_yellow = &arr_fire_yellow[0];
 
   // Bucle principal del Juego
+  main_loop();
+}
+
+/*
+ * Function:  main_loop
+ * --------------------
+ * Bucle principal del Juego
+ *
+ */
+void main_loop() {
   entity = 0;
   bomb = 0;
   game_entities = 0;
@@ -96,15 +105,12 @@ void main(void) {
   // Activa rutinas im2
   im2_pause = 0;
   for (;;) {
-    // Imprime el tiempo
+    // Imprime el tiempo restante de partida
     print_time();
-    // Anima Bombas
+    // Anima las Bombas TODO animación mas lenta
     bomb_anim();
     // Explota Bombas
-    bomb_check();
-    // Pausa
-    if (!in_explo)
-      z80_delay_ms(25);
+    explode_check();
 
     entity_collision();
     if (player_hit) {
@@ -133,12 +139,33 @@ void main(void) {
 }
 
 /*
- * Function:  draw
+ * Function:  main_im2
+ * --------------------
+ * Rutina enlazada a im2 Nirvana
+ *
+ */
+void main_im2() {
+  // Aumenta "Reloj"
+  ++time;
+  // Contador de Segundos
+  ++time_sec;
+  if (time_sec == 50) {
+    --game_time;
+    time_sec = 0;
+  }
+  // Animación entidades
+  if (im2_free && !im2_pause) {
+    entity_anim();
+  }
+}
+
+/*
+ * Function:  draw_entity
  * --------------------
  * Dibuja entidad, envuelve lógica para rotar entre bordes de pantalla
  * horizontalmente
  */
-void draw() {
+void draw_entity() {
   unsigned char t;
   // Dibuja un entity
   if (entity == 0) {
@@ -175,7 +202,6 @@ void draw_restore() {
   if (*col == col0 && *lin == lin0) {
     return;
   }
-  // map_restore(lin0 >> 4 << 4, col0 >> 1 << 1);
   map_restore(lin0, col0);
 }
 
@@ -290,7 +316,7 @@ void entity_anim() {
       entity_move_ballon();
       break;
     case ENT_EXPLODING:
-      draw();
+      draw_entity();
       ++*frame;
       if (*frame == 5) {
         // Elimina entidad
@@ -311,7 +337,7 @@ void entity_anim() {
       }
     default:
       frame_inc();
-      draw();
+      draw_entity();
       // entity_move_ballon();
       break;
     }
@@ -384,7 +410,7 @@ void entity_move_player() {
   if (inp & IN_STICK_FIRE) {
     bomb_add();
     // frame_inc();
-    // draw();
+    // draw_entity();
     return;
   }
   if (inp & IN_STICK_LEFT) {
@@ -395,7 +421,7 @@ void entity_move_player() {
       map_scroll(BIT_LEFT);
     }
     frame_inc();
-    draw();
+    draw_entity();
     return;
   }
   if (inp & IN_STICK_RIGHT) {
@@ -406,26 +432,26 @@ void entity_move_player() {
       map_scroll(BIT_RIGHT);
     }
     frame_inc();
-    draw();
+    draw_entity();
     return;
   }
   if (inp & IN_STICK_DOWN) {
     dirs[0] = BIT_DOWN;
     move_down();
     frame_inc();
-    draw();
+    draw_entity();
     return;
   }
   if (inp & IN_STICK_UP) {
     dirs[0] = BIT_UP;
     move_up();
     frame_inc();
-    draw();
+    draw_entity();
     return;
   }
   if (inp == 0) {
     *frame = 0;
-    draw();
+    draw_entity();
     return;
   }
 }
@@ -520,7 +546,7 @@ void entity_move_ballon() {
     }
 
     // Normal
-    draw();
+    draw_entity();
     timers[entity] = time + 5;
   }
 }
@@ -726,6 +752,42 @@ void map_create() {
   // screen[MAP_WIDTH * (MAP_HEIGHT - 1)] = 3;
   // screen[MAP_WIDTH * MAP_HEIGHT - 1] = 3;
 }
+
+/*
+ * Function:  map_calc
+ * --------------------
+ * calcula un indice del mapa a partir de las coordenadas l,c , la columna es
+ * relativa al mapa no la pantalla.
+ */
+unsigned int map_calc(unsigned char l, unsigned char c) { return ((l - 16 >> 4) * MAP_WIDTH) + (c >> 1); }
+
+/*
+ * Function:  map_get
+ * --------------------
+ * Retorna el bloque en base a una linea y columna de la pantalla
+ * Retorna T_ER si esta fuera del mapa
+ */
+unsigned char map_get(unsigned char l, unsigned char c) {
+  unsigned int i;
+  i = map_calc(l, c);
+  if (i < MAP_SIZE) {
+    return screen[i];
+  } else {
+    return T_ER;
+  }
+}
+
+/*
+ * Function:  map_set
+ * --------------------
+ * fija el valor v en la casilla (l,c) del mapa
+ *
+ */
+void map_set(unsigned char v, unsigned char l, unsigned char c) {
+  // TODO MACRO
+  screen[map_calc(l, c)] = v;
+}
+
 /*
  * Function:  map_scroll
  * --------------------
@@ -749,37 +811,6 @@ void map_scroll(unsigned char d) {
   intrinsic_ei();
   scroll_max = scroll_min + 32;
 }
-
-/*
- * Function:  map_calc
- * --------------------
- * calcula un indice del mapa a partir de las coordenadas l,c , la columna es
- * relativa al mapa no la pantalla.
- */
-unsigned int map_calc(unsigned char l, unsigned char c) {
-  return ((l - 16 >> 4) * MAP_WIDTH) + (c >> 1);
-}
-
-/*
- * Function:  map_get
- * --------------------
- * Retorna el bloque en base a una linea y columna de la pantalla
- * Retorna T_ER si esta fuera del mapa
- */
-unsigned char map_get(unsigned char l, unsigned char c) {
-  unsigned int i;
-  i = map_calc(l, c);
-  if (i < MAP_SIZE) {
-    return screen[i];
-  } else {
-    return T_ER;
-  }
-}
-
-void map_set(unsigned char v, unsigned char l, unsigned char c) {
-  screen[map_calc(l, c)] = v;
-}
-
 /*
  * Function:  map_empty
  * --------------------
@@ -799,6 +830,7 @@ unsigned char map_empty(unsigned char l, unsigned char c) {
  * Restaura dibujo de un casillero del mapa, según las coordenadas
  */
 void map_restore(unsigned char l, unsigned char c) {
+  // TODO MACRO
   btile_draw(screen[map_calc(l, c)], l, c - scroll_min);
 }
 
@@ -846,27 +878,6 @@ unsigned char move_bloc_col(unsigned char c) {
     }
   }
   return 0;
-}
-
-/*
- * Function:  im2
- * --------------------
- * Rutina enlazada a im2 Nirvana
- *
- */
-void im2() {
-  // Aumenta "Reloj"
-  ++time;
-  // Contador de Segundos
-  ++time_sec;
-  if (time_sec == 50) {
-    --game_time;
-    time_sec = 0;
-  }
-  // Animación entidades
-  if (im2_free && !im2_pause) {
-    entity_anim();
-  }
 }
 
 /*
@@ -930,26 +941,6 @@ void bomb_add() {
     }
   }
 }
-/*
- * Function:  bomb_check
- * --------------------
- * Explota las bombas, llamado desde bucle principal
- *
- */
-void bomb_check() {
-  unsigned char b;
-  in_explo = 0;
-  b = 0;
-  while (b < MAX_BOMBS) {
-    if (bomb_timer[b] != 0 && time > bomb_timer[b]) {
-
-      explo_trigger[b] = 0;
-      explode_anim(b);
-      in_explo = 1;
-    }
-    ++b;
-  }
-}
 
 /*
  * Function:  bomb_activate
@@ -964,6 +955,7 @@ void bomb_activate(unsigned char d, unsigned char l, unsigned char c) {
   while (b < MAX_BOMBS) {
     if (bomb_mode[b] == BOMB_INITIAL && bomb_lin[b] == l && bomb_col[b] == c) {
       explo_trigger[b] = d;
+      bomb_timer[b] = time;
       explode_anim(b);
     }
     ++b;
@@ -1025,13 +1017,14 @@ void explode_anim(unsigned char b) {
     // Dibuja
     explode_draw(b, 0);
     // Explota Bordes
+
     explode_edges(b);
-    NIRVANAP_halt();
-    beepSteve(SFX_BOMB_EXPLO);
-    // explode_paint(b, attrs_fire_yellow);
-    // explode_paint(b, attrs_fire_red);
     break;
   case BOMB_EXPLODE1:
+    if (explo_sound == 0) {
+      beepSteve(SFX_BOMB_EXPLO);
+      ++explo_sound;
+    }
     // Fijo Siguiente Estado
     bomb_mode[b] = BOMB_EXPLODE2;
     // Mata
@@ -1076,34 +1069,7 @@ void explode_anim(unsigned char b) {
   default:
     break;
   }
-}
-
-/*
- * Function:  explode_kill
- * --------------------
- * Mata a entidades afectadas por la explosión
- *
- */
-void explode_kill(unsigned char b) {
-  unsigned char e = 0;
-  // Todos
-  while (e < ENTITIES) {
-    if (types[e] < ENT_ACTIVE) {
-      if ((explo_left[b] <= cols[e]) &&     //
-          (explo_right[b] >= cols[e]) &&    //
-          (abs(bomb_lin[b] - lins[e]) < 16) //
-      ) {
-        entity_die(e);
-      }
-      if ((explo_up[b] <= lins[e]) &&      //
-          (explo_down[b] >= lins[e]) &&    //
-          (abs(bomb_col[b] - cols[e]) < 2) //
-      ) {
-        entity_die(e);
-      }
-    }
-    ++e;
-  }
+  NIRVANAP_halt(); // TESTING DUMP
 }
 
 /*
@@ -1159,8 +1125,7 @@ void explode_calc(unsigned char b) {
     explo_max_down[b] = 160;
     explo_down[b] = 160;
   } else {
-    while (explo_down[b] < explo_max_down[b] &&
-           map_get(explo_down[b] + 16, bomb_col[b]) == BLOCK_EMPTY) {
+    while (explo_down[b] < explo_max_down[b] && map_get(explo_down[b] + 16, bomb_col[b]) == BLOCK_EMPTY) {
       explo_down[b] += 16;
     }
   }
@@ -1177,8 +1142,7 @@ void explode_calc(unsigned char b) {
     explo_max_up[b] = 32;
     explo_up[b] = 32;
   } else {
-    while (explo_up[b] > explo_max_up[b] &&
-           map_get(explo_up[b] - 16, bomb_col[b]) == BLOCK_EMPTY) {
+    while (explo_up[b] > explo_max_up[b] && map_get(explo_up[b] - 16, bomb_col[b]) == BLOCK_EMPTY) {
       explo_up[b] -= 16;
     }
   }
@@ -1194,8 +1158,7 @@ void explode_calc(unsigned char b) {
     explo_max_left[b] = 2;
     explo_left[b] = 2;
   } else {
-    while (explo_left[b] > explo_max_left[b] &&
-           map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
+    while (explo_left[b] > explo_max_left[b] && map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
       explo_left[b] -= 2;
     }
   }
@@ -1212,22 +1175,28 @@ void explode_calc(unsigned char b) {
     explo_max_right[b] = 96;
     explo_right[b] = 96;
   } else {
-    while (explo_right[b] < explo_max_right[b] &&
-           map_get(bomb_lin[b], explo_right[b] + 2) == BLOCK_EMPTY) {
+    while (explo_right[b] < explo_max_right[b] && map_get(bomb_lin[b], explo_right[b] + 2) == BLOCK_EMPTY) {
       explo_right[b] += 2;
     }
   }
 
-  print_char(explo_down[b], 23, 0);
-  print_char(explo_up[b], 23, 4);
-  print_char(explo_left[b], 23, 8);
-  print_char(explo_right[b], 23, 12);
+  // print_char(explo_down[b], 23, 0);
+  // print_char(explo_up[b], 23, 4);
+  // print_char(explo_left[b], 23, 8);
+  // print_char(explo_right[b], 23, 12);
 
-  print_char(bomb_lin[b], 23, 20);
-  print_char(bomb_col[b], 23, 24);
+  // print_char(bomb_lin[b], 23, 20);
+  // print_char(bomb_col[b], 23, 24);
 }
-void explode_cell(unsigned char b, unsigned char d, unsigned char l,
-                  unsigned char c) {
+
+/*
+ * Function:  explode_cell
+ * --------------------
+ * Explota la casilla en (l,c) del mapa por la bomba b en la dirección d
+ * la dirección se ocupa para cuando hay explosiones en cascada,
+ * para no volver a dibujar en la dirección de la bomba que la explotó
+ */
+void explode_cell(unsigned char b, unsigned char d, unsigned char l, unsigned char c) {
   switch (screen[map_calc(l, c)]) {
   case BLOCK_BRICK:
     // Explota los ladrillos
@@ -1252,6 +1221,34 @@ void explode_cell(unsigned char b, unsigned char d, unsigned char l,
   }
 }
 
+/*
+ * Function:  explode_check
+ * --------------------
+ * Explota las bombas, llamado desde bucle principal
+ *
+ */
+void explode_check() {
+  unsigned char b;
+  unsigned char c;
+  b = 0;
+  while (b < MAX_BOMBS) {
+    if (bomb_timer[b] != 0 && time > bomb_timer[b]) {
+      explo_trigger[b] = 0;
+      explode_anim(b);
+      ++c;
+    }
+    ++b;
+  }
+  if (c == 0) {
+    explo_sound = 0;
+  }
+}
+/*
+ * Function:  explode_draw
+ * --------------------
+ * Dibuja la explosion de la bomba b, con la potencia p
+ * se llama 3 veces por explosión
+ */
 void explode_draw(unsigned char b, unsigned char p) {
   unsigned char i;
   unsigned char j;
@@ -1303,27 +1300,52 @@ void explode_draw(unsigned char b, unsigned char p) {
   }
   if (p == 0) {
     // Bordes de explosion solo para el primer dibujado
-    // Derecha
-    if (map_get(bomb_lin[b], explo_right[b] + 1 - scroll_min) == BLOCK_EMPTY) {
-      btile_half_h(0, BTILE_END_EXP, bomb_lin[b],
-                   explo_right[b] + 1 - scroll_min);
-    }
-    // Izquierda
-    if (map_get(bomb_lin[b], explo_left[b] - 1 - scroll_min) == BLOCK_EMPTY) {
-      btile_half_h(1, BTILE_END_EXP, bomb_lin[b],
-                   explo_left[b] - 1 - scroll_min);
+    // Abajo
+    if (explo_down[b] == explo_max_down[b] && explo_down[b] != bomb_lin[b]) {
+      btile_half_v(1, BTILE_END_EXP, explo_down[b] + 8, bomb_col[b] - scroll_min);
     }
     // Arriba
-    if (map_get(explo_up[b], bomb_col[b] - scroll_min) == BLOCK_EMPTY) {
+    if (explo_up[b] == explo_max_up[b] && explo_up[b] != bomb_lin[b]) {
       btile_half_v(0, BTILE_END_EXP, explo_up[b], bomb_col[b] - scroll_min);
     }
-    // Abajo
-    if (map_get(explo_down[b] + 8, bomb_col[b] - scroll_min) == BLOCK_EMPTY) {
-      btile_half_v(1, BTILE_END_EXP, explo_down[b] + 8,
-                   bomb_col[b] - scroll_min);
+    // Izquierda
+    if (explo_left[b] == explo_max_left[b] && explo_left[b] != bomb_col[b]) {
+      btile_half_h(1, BTILE_END_EXP, bomb_lin[b], explo_left[b] - 1 - scroll_min);
+    }
+    // Derecha
+    if (explo_right[b] == explo_max_right[b] && explo_right[b] != bomb_col[b]) {
+      btile_half_h(0, BTILE_END_EXP, bomb_lin[b], explo_right[b] + 1 - scroll_min);
     }
   }
   im2_pause = 0;
+}
+
+/*
+ * Function:  explode_kill
+ * --------------------
+ * Mata a entidades afectadas por la explosión
+ *
+ */
+void explode_kill(unsigned char b) {
+  unsigned char e = 0;
+  // Todos
+  while (e < ENTITIES) {
+    if (types[e] < ENT_ACTIVE) {
+      if ((explo_left[b] <= cols[e]) &&     //
+          (explo_right[b] >= cols[e]) &&    //
+          (abs(bomb_lin[b] - lins[e]) < 16) //
+      ) {
+        entity_die(e);
+      }
+      if ((explo_up[b] <= lins[e]) &&      //
+          (explo_down[b] >= lins[e]) &&    //
+          (abs(bomb_col[b] - cols[e]) < 2) //
+      ) {
+        entity_die(e);
+      }
+    }
+    ++e;
+  }
 }
 
 void explode_paint(unsigned char b, unsigned char *a) {

@@ -239,7 +239,7 @@ unsigned char game_time;
 // Valores para controla el dibujado en im2
 unsigned char im2_pause = 1;
 unsigned char im2_free = 1;
-unsigned char in_explo;
+unsigned char explo_sound;
 
 unsigned char sfx = 1;
 
@@ -250,7 +250,8 @@ unsigned char sfx = 1;
 //------------------------------------------------------------
 
 // Interrupciones
-void im2();
+void main_im2();
+void main_loop();
 
 // Entidades
 
@@ -294,9 +295,8 @@ void explode_draw(unsigned char b, unsigned char p);
 void explode_paint(unsigned char b, unsigned char *a);
 void explode_edges(unsigned char b);
 void explode_kill(unsigned char b);
-void explode_cell(unsigned char b, unsigned char d, unsigned char l,
-                  unsigned char c);
-void bomb_check();
+void explode_cell(unsigned char b, unsigned char d, unsigned char l, unsigned char c);
+void explode_check();
 
 /*
 ************************************************************
