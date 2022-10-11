@@ -44,7 +44,7 @@ void main(void) {
   printInk(INK_BLACK);
   printAt(0, 12);
   // printf("Bombermin");
-  printAt(23, 8);
+  printAt(23, 9);
   printf("Bombermin Demo");
 
   // Configura direcciones para los btiles y blocks(UDGs)
@@ -879,7 +879,39 @@ unsigned char move_bloc_col(unsigned char c) {
   }
   return 0;
 }
-
+/*
+ * Function:  bomb_anim
+ * --------------------
+ * Animación de las bombas
+ *
+ */
+void bomb_anim() {
+  unsigned char b;
+  if (time > bombs_time) {
+    b = 0;
+    // Para prevenir que Nirvana dibuje incorrectamente si le pilla una
+    // interrupción
+    NIRVANAP_halt();
+    while (b < MAX_BOMBS) {
+      // Esta la bomba activa
+      if (bomb_mode[b] == BOMB_INITIAL) {
+        // Animación Bomba
+        sprite_draw(                    //
+            b,                          //
+            BTILE_BOMB + bomb_frame[b], //
+            bomb_lin[b],                //
+            bomb_col[b] - scroll_min    //
+        );
+        ++bomb_frame[b];
+        if (bomb_frame[b] > 2) {
+          bomb_frame[b] = 0;
+        }
+      }
+      ++b;
+    }
+    bombs_time = time + BOMB_ANIM_TIME;
+  }
+}
 /*
  * Function:  bomb_init
  * --------------------
@@ -957,36 +989,6 @@ void bomb_activate(unsigned char d, unsigned char l, unsigned char c) {
       explo_trigger[b] = d;
       bomb_timer[b] = time;
       explode_anim(b);
-    }
-    ++b;
-  }
-}
-/*
- * Function:  bomb_anim
- * --------------------
- * Animación de las bombas
- *
- */
-void bomb_anim() {
-  unsigned char b;
-  b = 0;
-  // Para prevenir que Nirvana dibuje incorrectamente si le pilla una
-  // interrupción
-  NIRVANAP_halt();
-  while (b < MAX_BOMBS) {
-    // Esta la bomba activa
-    if (bomb_mode[b] == BOMB_INITIAL) {
-      // Animación Bomba
-      sprite_draw(                    //
-          b,                          //
-          BTILE_BOMB + bomb_frame[b], //
-          bomb_lin[b],                //
-          bomb_col[b] - scroll_min    //
-      );
-      ++bomb_frame[b];
-      if (bomb_frame[b] > 2) {
-        bomb_frame[b] = 0;
-      }
     }
     ++b;
   }

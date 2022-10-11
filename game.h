@@ -45,6 +45,7 @@ udk_t k1;
 #define BLOCK_BOMB 27
 
 // Bombas
+#define BOMB_ANIM_TIME 5
 #define BOMB_FRAMES 10
 #define BOMB_OFF 128
 #define BOMB_EXPLODE3 252
@@ -206,6 +207,7 @@ unsigned char bomb_frame[MAX_BOMBS];
 unsigned int bomb_timer[MAX_BOMBS];
 unsigned int bomb_mode[MAX_BOMBS];
 unsigned char bomb;
+unsigned int bombs_time;
 
 // Explosiones
 unsigned char explo_up[MAX_BOMBS];
