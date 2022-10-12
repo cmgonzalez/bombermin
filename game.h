@@ -308,7 +308,7 @@ void bomb_activate(unsigned char d, unsigned char l, unsigned char c);
 // Explosiones
 void explode_calc(unsigned char b);
 void explode_draw(unsigned char b, unsigned char p);
-void explode_paint(unsigned char b, unsigned char *a);
+void explode_restore(unsigned char b);
 void explode_edges(unsigned char b);
 void explode_kill(unsigned char b);
 void explode_cell(unsigned char b, unsigned char d, unsigned char l, unsigned char c);

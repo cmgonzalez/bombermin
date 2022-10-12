@@ -1103,13 +1103,11 @@ void explode_anim(unsigned char b) {
     // Dibuja
     explode_draw(b, 0);
     // Explota Bordes
-
     explode_edges(b);
     break;
   case BOMB_EXPLODE1:
     if (explo_sound == 0) {
-      beepSteve(SFX_BOMB_EXPLO);
-      ++explo_sound;
+      player_sound = SFX_BOMB_EXPLO;
     }
     // Fijo Siguiente Estado
     bomb_mode[b] = BOMB_EXPLODE2;
@@ -1117,7 +1115,6 @@ void explode_anim(unsigned char b) {
     explode_kill(b);
     // Fijo el frame para la animación de los ladrillos
     bomb_frame[b] = 1;
-
     // Dibuja
     explode_draw(b, 8);
     // Explota Bordes
@@ -1139,7 +1136,7 @@ void explode_anim(unsigned char b) {
   case BOMB_EXPLODE3:
     // Fijo Siguiente Estado
     // Restauro
-    explode_paint(b, attrs_back);
+    explode_restore(b);
     explode_edges(b);
     // Limpia Mapa para no confundir a la función explode
     map_set(BLOCK_EMPTY, bomb_lin[b], bomb_col[b]);
@@ -1319,7 +1316,9 @@ void explode_check() {
   while (b < MAX_BOMBS) {
     if (bomb_timer[b] != 0 && time > bomb_timer[b]) {
       explo_trigger[b] = 0;
+      im2_pause = 1;
       explode_anim(b);
+      im2_pause = 0;
       ++c;
     }
     ++b;
@@ -1337,7 +1336,7 @@ void explode_check() {
 void explode_draw(unsigned char b, unsigned char p) {
   unsigned char i;
   unsigned char j;
-  im2_pause = 1;
+
   // Vertical
   i = explo_down[b];
   j = 0;
@@ -1402,7 +1401,6 @@ void explode_draw(unsigned char b, unsigned char p) {
       btile_half_h(0, BTILE_END_EXP, bomb_lin[b], explo_right[b] + 1 - scroll_min);
     }
   }
-  im2_pause = 0;
 }
 
 /*
@@ -1433,26 +1431,30 @@ void explode_kill(unsigned char b) {
   }
 }
 
-void explode_paint(unsigned char b, unsigned char *a) {
+/*
+ * Function:  explode_restore
+ * --------------------
+ * Mata a entidades afectadas por la explosión
+ *
+ */
+void explode_restore(unsigned char b) {
   unsigned char i;
 
-  im2_pause = 1;
   // Vertical
   i = explo_down[b];
-  NIRVANAP_halt();
   while (i >= explo_up[b]) {
-    btile_paint(a, i, bomb_col[b] - scroll_min);
+    // btile_paint(a, i, bomb_col[b] - scroll_min);
+    btile_draw_halt(0, i, bomb_col[b] - scroll_min);
     i -= 16;
   }
   // Horizontal
   i = explo_left[b];
 
-  NIRVANAP_halt();
   while (i <= explo_right[b]) {
-    btile_paint(a, bomb_lin[b], i - scroll_min);
+    // btile_paint(a, bomb_lin[b], i - scroll_min);
+    btile_draw_halt(0, bomb_lin[b], i - scroll_min);
     i += 2;
   }
-  im2_pause = 0;
 }
 
 /*

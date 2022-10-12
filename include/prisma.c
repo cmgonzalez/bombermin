@@ -160,8 +160,7 @@ void btile_half(unsigned char bt, unsigned char l) {
  * h = 0 derecha  h = 1 izquierda
  *
  */
-void btile_half_h(unsigned char h, unsigned char bt, unsigned char l,
-                  unsigned char c) {
+void btile_half_h(unsigned char h, unsigned char bt, unsigned char l, unsigned char c) {
   unsigned char *bdst;
   unsigned char *bsrc;
   unsigned char lin_end;
@@ -203,8 +202,7 @@ void btile_half_h(unsigned char h, unsigned char bt, unsigned char l,
  * h = 0 derecha  h = 1 izquierda
  *
  */
-void btile_half_v(unsigned char h, unsigned char bt, unsigned char l,
-                  unsigned char c) {
+void btile_half_v(unsigned char h, unsigned char bt, unsigned char l, unsigned char c) {
   unsigned char *bdst;
   unsigned char *bsrc;
   unsigned char lin_end;
@@ -288,8 +286,7 @@ void btile_paint(unsigned char *a, unsigned char l, unsigned char c) {
  * Dibuja un btile usando los sprites nirvana "gratis"
  * el dibujo se realiza en el próximo frame y sobrescribe la pantalla.
  */
-void sprite_draw(unsigned char s, unsigned char t, unsigned char l,
-                 unsigned char c) {
+void sprite_draw(unsigned char s, unsigned char t, unsigned char l, unsigned char c) {
   if (l < 192 && c < 31) {
     // Dibuja un sprite nirvana en el próximo frame
     NIRVANAP_spriteT(s, t, l, c);
