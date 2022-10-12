@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------
- * Rascan - The Simmerian
+ * Bombermin
  * ----------------------------------------------------------------
    This file is part of Prisma Engine v2.0.
 
@@ -25,9 +25,9 @@
  */
 
 void main(void) {
-  // z80_delay_ms(250);
-  in_wait_key();
-  in_wait_nokey();
+  z80_delay_ms(25);
+  // in_wait_key();
+  // in_wait_nokey();
 
   // Inicializa controles
   k1.fire = IN_KEY_SCANCODE_SPACE;
@@ -59,10 +59,6 @@ void main(void) {
   // Enlaza la función "im2"  con la interrupción IM2 de Nirvana
   NIRVANAP_ISR_HOOK[0] = 205;
   z80_wpoke(&NIRVANAP_ISR_HOOK[1], (unsigned int)main_im2);
-  // Atributos de fondo para pintar al limpiar
-  attrs_back = &arr_back[0];
-  attrs_fire_red = &arr_fire_red[0];
-  attrs_fire_yellow = &arr_fire_yellow[0];
 
   // Bucle principal del Juego
   main_loop();
@@ -84,7 +80,8 @@ void main_loop() {
   player_bombs = 1;
   player_bomb_walk = 0;
   player_brick_walk = 0;
-  player_speed = PLAYER_NORMAL;
+  player_speed = PLAYER_FAST;
+  player_brick_walk = 1;
   player_hit = 0;
   game_stage = 1;
   game_time = 200;
@@ -145,6 +142,7 @@ void main_loop() {
  *
  */
 void main_im2() {
+  zx_border(INK_RED);
   // Aumenta "Reloj"
   ++time;
   // Contador de Segundos
@@ -157,6 +155,7 @@ void main_im2() {
   if (im2_free && !im2_pause) {
     entity_anim();
   }
+  zx_border(INK_WHITE);
 }
 
 /*
@@ -168,28 +167,53 @@ void main_im2() {
 void draw_entity() {
   unsigned char t;
   // Dibuja un entity
-  if (entity == 0) {
-    switch (dirs[0]) {
-    case BIT_RIGHT:
-      t = BTILE_PLAYER_HOR + *frame;
-      break;
-    case BIT_LEFT:
-      t = BTILE_PLAYER_HOR + FRAMES + *frame;
-      break;
-    case BIT_DOWN:
-      t = BTILE_PLAYER_VER + *frame;
-      break;
-    case BIT_UP:
-      t = BTILE_PLAYER_VER + FRAMES + *frame;
-      break;
-    }
-  } else {
-    t = tiles[entity] + *frame;
+  t = tiles[entity] + *frame;
+  // Restaura Fondo solo atributos paper y tinta verde
+  draw_restore_fast();
+  // Tile Personaje
+  btile_draw(t, *lin, *col - scroll_min);
+}
+
+/*
+ * Function:  draw_entity
+ * --------------------
+ * Dibuja entidad, envuelve lógica para rotar entre bordes de pantalla
+ * horizontalmente
+ */
+void draw_player() {
+  unsigned char t;
+  // Dibuja al protagonista
+
+  switch (dirs[0]) {
+  case BIT_RIGHT:
+    t = BTILE_PLAYER_HOR + *frame;
+    break;
+  case BIT_LEFT:
+    t = BTILE_PLAYER_HOR + FRAMES + *frame;
+    break;
+  case BIT_DOWN:
+    t = BTILE_PLAYER_VER + *frame;
+    break;
+  case BIT_UP:
+    t = BTILE_PLAYER_VER + FRAMES + *frame;
+    break;
   }
+
   // Restaura Fondo
   draw_restore();
   // Tile Personaje
   btile_draw(t, *lin, *col - scroll_min);
+
+  if (map_get(*lin, *col) == BLOCK_BRICK)
+    NIRVANAP_paintC(attrs_brick_wall, *lin, *col - scroll_min);
+  if (map_get(*lin, *col + 1) == BLOCK_BRICK)
+    NIRVANAP_paintC(attrs_brick_wall, *lin, *col + 1 - scroll_min);
+  if (map_get(*lin + 8, *col) == BLOCK_BRICK)
+    NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col - scroll_min);
+  if (map_get(*lin + 8, *col + 1) == BLOCK_BRICK)
+    NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col + 1 - scroll_min);
+  // NIRVANAP_readC(a, b, c) NIRVANAP_readC_callee(a, b, c)
+  // btile_paint(attrs_fire_yellow, *lin, *col - 1);
 }
 
 /*
@@ -199,10 +223,33 @@ void draw_entity() {
  * movimiento
  */
 void draw_restore() {
-  if (*col == col0 && *lin == lin0) {
-    return;
+  // if (*col == col0 && *lin == lin0) {
+  //   return;
+  // }
+  if (*col != col0) {
+    // Movimiento Horizontal
+    if (*col > col0) {
+      // Derecha
+      map_restore((lin0 >> 4) << 4, ((col0) >> 1) << 1);
+    } else {
+      // Izquierda
+      map_restore((lin0 >> 4) << 4, ((col0 + 1) >> 1) << 1);
+    }
+  } else {
+    // Movimiento Vertical
+    if (*lin > lin0) {
+      // Arriba
+      map_restore(((lin0) >> 4) << 4, (col0 >> 1) << 1);
+    } else {
+      // Abajo
+      map_restore(((lin0 + 8) >> 4) << 4, (col0 >> 1) << 1);
+    }
   }
-  map_restore(lin0, col0);
+}
+
+void draw_restore_fast() {
+  // TODO MACRO
+  btile_paint(arr_back, lin0, col0 - scroll_min);
 }
 
 /*
@@ -307,7 +354,9 @@ void entity_anim() {
     lin0 = *lin;
     switch (types[entity]) {
     case ENT_PLAYER:
+      game_brick_walk = player_brick_walk;
       entity_move_player();
+      game_brick_walk = 0;
       break;
     case ENT_BALLON:
       entity_move_ballon();
@@ -402,7 +451,6 @@ void entity_init() {
  */
 void entity_move_player() {
   unsigned inp;
-
   // Fijo la próxima llamada en 5 frames, TODO ponerla al final...
 
   inp = (joyfunc1)(&k1);
@@ -421,7 +469,7 @@ void entity_move_player() {
       map_scroll(BIT_LEFT);
     }
     frame_inc();
-    draw_entity();
+    draw_player();
     return;
   }
   if (inp & IN_STICK_RIGHT) {
@@ -432,26 +480,26 @@ void entity_move_player() {
       map_scroll(BIT_RIGHT);
     }
     frame_inc();
-    draw_entity();
+    draw_player();
     return;
   }
   if (inp & IN_STICK_DOWN) {
     dirs[0] = BIT_DOWN;
     move_down();
     frame_inc();
-    draw_entity();
+    draw_player();
     return;
   }
   if (inp & IN_STICK_UP) {
     dirs[0] = BIT_UP;
     move_up();
     frame_inc();
-    draw_entity();
+    draw_player();
     return;
   }
   if (inp == 0) {
     *frame = 0;
-    draw_entity();
+    draw_player();
     return;
   }
 }
@@ -818,7 +866,8 @@ void map_scroll(unsigned char d) {
  */
 unsigned char map_empty(unsigned char l, unsigned char c) {
   unsigned char v = map_get(l, c);
-  if (v == BLOCK_EMPTY) { // || v == BLOCK_BRICK) {
+
+  if ((v == BLOCK_EMPTY) || (game_brick_walk && v == BLOCK_BRICK) || (game_bomb_walk && v == BLOCK_BOMB)) {
     return 1;
   } else {
     return 0;

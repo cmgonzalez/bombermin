@@ -174,12 +174,7 @@ unsigned char screen[MAP_SIZE];
 unsigned char scroll_min;
 unsigned char scroll_max;
 
-// Atributos Nirvanisticos
-unsigned char *attrs;
-unsigned char *attrs_back;
-unsigned char *attrs_fire_red;
-unsigned char *attrs_fire_yellow;
-
+// Arreglos para Atributos Nirvanisticos
 unsigned char att[4];
 unsigned char arr_back[4] = {
     PAPER_GREEN | INK_GREEN,
@@ -199,6 +194,20 @@ unsigned char arr_fire_yellow[4] = {
     PAPER_RED | INK_YELLOW,
     PAPER_RED | INK_YELLOW,
 };
+
+unsigned char arr_brick_wall[4] = {
+    PAPER_WHITE | INK_BLACK,
+    PAPER_WHITE | INK_BLACK,
+    PAPER_WHITE | INK_BLACK,
+    PAPER_WHITE | INK_BLACK,
+};
+
+// Punteros para Atributos Nirvanisticos
+unsigned char *attrs;
+unsigned char *attrs_back = &arr_back[0];
+unsigned char *attrs_fire_red = &arr_fire_red[0];
+unsigned char *attrs_fire_yellow = &arr_fire_yellow[0];
+unsigned char *attrs_brick_wall = &arr_brick_wall[0];
 
 // Bombas
 unsigned char bomb_col[MAX_BOMBS];
@@ -237,6 +246,8 @@ unsigned char game_entities;
 unsigned int game_score;
 unsigned char game_stage;
 unsigned char game_time;
+unsigned char game_brick_walk;
+unsigned char game_bomb_walk;
 
 // Valores para controla el dibujado en im2
 unsigned char im2_pause = 1;
