@@ -26,8 +26,8 @@
 
 void main(void) {
   // z80_delay_ms(250);
-  // in_wait_key();
-  // in_wait_nokey();
+  in_wait_key();
+  in_wait_nokey();
 
   // Inicializa controles
   k1.fire = IN_KEY_SCANCODE_SPACE;

@@ -1,0 +1,459 @@
+===================================DISCLAIMER==================================
+I have decided not to allow websites other than Gamefaqs (www.gamefaqs.com),
+IGN (faqs.ign.com) & Gamespot (www.gamespot.com) to host my FAQs from now on.
+Please don't ask, because I will not grant permission.  It's just that too many
+sites don't keep their version of my FAQ up to date which makes for a lot of
+hassle in my mailbox.
+So if anyone sees this FAQ on any site other than those mentioned above, please
+let me know and I will take care of the situation, thanks.
+
+Just to make things crystal clear for some people, this FAQ is not to appear
+anywhere at the following URLs:
+
+http://www.cheatcc.com
+http://www.cheatindex.com
+
+
+This document Copyright 2004,2017,2022 Daniel Engel
+===============================================================================
+
+Bomberman FAQ
+August 20, 2022
+Daniel (DEngel) Engel
+dengelchill [AT] gmail [DOT] com
+twitch.tv/dengelchill
+
+
+
+###############################################################################
+                             (A) TABLE OF CONTENTS
+###############################################################################
+
+Table of Contents
+
+ (A) This Table of Contents
+ (B) Controls
+ (C) Enemies
+ (D) Powerups
+ (E) Tips
+ (F) The Game
+ (G) Passwords
+ (H) Experimental
+
+
+###############################################################################
+                                 (B) CONTROLS
+###############################################################################
+
+The controls for this game are very simple, and are as follows:
+
+A - Sets a bomb.
+B - Not used at first, but can be used to detonate bombs with the
+    detonator powerup.
+
+Start - Pauses the game.
+Select - Pick between options on the main menu.
+
+
+###############################################################################
+                                  (C) ENEMIES
+###############################################################################
+
+================
+Valcom (Balloon)
+================
+
+Very simple enemies, slow moving, easy to kill, worth 100 points.  They just
+move back and forth (when they hit something) in a monotonous pattern 90% of
+the time.  They will rarely change direction, but they sometimes do, so be
+ready for it.
+
+
+===============
+O'Neal (Beaker)
+===============
+
+Simple enemies, faster than Valcoms, and many times they will change direction
+and come towards you, worth 200 points.
+
+
+==============
+Dahl (Lantern)
+==============
+
+These purple enemies are faster than the O'Neals, but move in a similar way,
+they're worth 400 points.
+
+
+============
+Minvo (Face)
+============
+
+These orange enemies move very quickly (faster than Dahls) in a back and forth
+motion much like the Valcoms.  They're worth 800 points each.
+
+
+=============
+Ovape (Jelly)
+=============
+
+These blue enemies move VERY slowly, and are VERY easy to kill.  They can
+travel through bricks, and they're worth 1000 points each.  They can also be
+killed while in the bricks if you blow up the bricks with a bomb.
+
+
+=============
+Doria (Ghost)
+=============
+
+These purple enemies move at medium speed and can travel through bricks,
+they're worth 2000 points each.
+
+
+===========
+Pass (Bear)
+===========
+
+These enemies move about as fast as a Minvo, maybe faster, and they want to get
+you more.  They're each worth 4000 points.
+
+
+=============
+Pontan (Coin)
+=============
+
+These guys are extremely fast and deadly, they can walk through walls and are
+worth 8000 points each.
+
+
+###############################################################################
+                                  (D) POWERUPS
+###############################################################################
+
+As you blast the bricks away in the game you will com across some powerups.
+These will make your game a lot easier, and come in a variety of forms.
+
+
+=====
+Bombs
+=====
+
+Allow you to set one more bomb at a time, you start out being able to set one
+at a time.  The maximum amount of bombs you'll ever be able to set down at one
+time will be 10, by using this powerup.
+
+
+====
+Fire
+====
+
+Increases the range of your bomb blasts by one square (in each direction).  The
+maximum range that you can get is 5 squares (in each direction).
+
+
+=================
+Detonator (Heart)
+=================
+
+Allows you to detonate your bombs whenever you want by pressing B.
+
+
+================
+Speedup (Skates)
+================
+
+Allow you to move twice as fast.
+
+
+=========
+Bomb-Walk
+=========
+
+Lets you walk through your bombs.
+
+
+===========
+Wall-Walker
+===========
+
+Lets you walk through walls (bricks).
+
+
+=======================
+Mystery (Question Mark)
+=======================
+
+Makes you invincible to enemies and bombs for 35 seconds.
+
+
+===========
+Flame-Proof
+===========
+
+Makes you invincible to your own bombs, lasts forever.
+
+
+###############################################################################
+                                   (E) TIPS
+###############################################################################
+
+Whatever you do, DO NOT bomb a powerup, or the exit.  This will cause more
+enemies (that are usually TOUGHER) to appear, and make life hard for you.
+
+You can walk through the exit.
+
+Always know the range of your bombs.
+
+Try to destroy multiple bricks with a single bomb.
+
+Try your best to exit the stage before the time is up, otherwise Pontans will
+show up, and they are hard to survive, much less kill.
+
+After every 5 stages you get to play a bonus stage.  Here you try to kill as
+many enemies as you can in the time limit.  You CAN NOT be killed in these
+stages.  Use this fireproof tactic: Set one bomb, then when it blows up let the
+fire touch you then keep setting bombs.  You will become a walking
+flamethrower!
+
+
+###############################################################################
+                                  (F) THE GAME
+###############################################################################
+                           Bricklayer J. Gastronomy
+
+For each stage I will tell you the number of enemies and which powerup is in
+the stage.  Basically stages 1-3 give you the basic tools you need to survive.
+The detonator in stage 3 being the big one, once you have this you really have
+no excuse for getting killed.  For this reason if you die in any of the first 3
+stages, reset.  The rest of the stages will give you more powerups to make you
+more deadly, which will help greatly for the bonus rounds and later levels.
+
+If you do happen to get killed though you will only lose wall-walker,
+detonator, bomb-walk and flame-proof powerups.
+
+The layout for every stage is randomly generated, the only thing that remains
+the same is how many enemies there are and which powerup is in the stage.
+
+Every stage has a 200 second time limit, and every bonus stage has a 30 second
+time limit.
+
+
+01 [6 Valcoms / Fire]
+
+02 [3 Valcoms, 3 O'Neals / Bomb]
+
+03 [2 Valcoms, 2 O'Neals, 2 Dahls / Detonator]
+
+04 [1 Valcom, 1 O'Neal, 2 Dahls, 2 Minvos / Speedup]
+
+05 [4 O'Neals, 3 Dahls / Bomb]
+
+BONUS STAGE [Valcoms]
+
+06 [2 O'Neals, 3 Dahls, 2 Minvos / Bomb]
+
+07 [2 O'Neals, 3 Dahls, 2 Ovapes / Fire]
+
+08 [1 O'Neal, 2 Dahls, 4 Minvos / Detonator]
+
+09 [1 O'Neal, 1 Dahl, 4 Minvos, 1 Doria / Bomb-Walk]
+
+10 [1 O'Neal, 1 Dahl, 1 Minvo, 1 Ovape, 3 Dorias / Wall-Walker]
+
+BONUS STAGE [O'Neals]
+
+11 [1 O'Neal, 2 Dahls, 3 Minvos, 1 Ovape, 1 Doria / Bomb]
+
+12 [1 O'Neal, 1 Dahl, 1 Minvo, 1 Ovape, 4 Dorias / Bomb]
+
+13 [3 Dahls, 3 Minvos, 2 Dorias / Detonator]
+
+14 [7 Ovapes, 1 Pass / Bomb-Walk]
+
+15 [1 Dahl, 3 Minvos, 3 Dorias, 1 Pass / Fire]
+
+BONUS STAGE [Dahls]
+
+16 [3 Minvos, 4 Dorias, 1 Pass / Wall-Walk]
+
+17 [5 Dahls, 2 Dorias, 1 Pass / Bomb]
+
+18 [3 Valcoms, 3 O'Neals, 2 Passes / Bomb-Walk]
+
+19 [1 Valcom, 1 Ovape, 1 O'Neal, 3 Dahls, 2 Passes / Bomb]
+
+20 [1 O'Neal, 1 Dahl, 1 Minvo, 1 Ovape, 2 Dorias, 2 Passes / Detonator]
+
+BONUS STAGE [Minvos]
+
+21 [3 Ovapes, 4 Dorias, 2 Passes / Bomb-Walk]
+
+22 [4 Dahls, 3 Minvos, 1 Doria, 1 Pass / Detonator]
+
+23 [2 Dahls, 2 Minvos, 2 Ovapes, 2 Dorias, 1 Pass / Bomb]
+
+24 [1 Dahl, 1 Minvo, 2 Ovapes, 4 Dorias, 1 Pass / Detonator]
+
+25 [2 O'Neals, 1 Dahl, 1 Minvo, 2 Ovapes, 2 Dorias, 1 Pass / Bomb-Walk]
+
+BONUS STAGE [Ovapes]
+
+26 [1 Valcom, 1 O'Neal, 1 Dahl, 1 Minvo, 1 Ovape, 2 Dorias, 1 Pass / 
+Mystery]
+
+27 [1 Valcom, 1 O'Neal, 1 Ovape, 5 Dorias, 1 Pass / Fire]
+
+28 [1 O'Neal, 3 Dahls, 3 Minvos, 1 Doria, 1 Pass / Bomb]
+
+29 [5 Ovapes, 2 Dorias, 2 Passes / Detonator]
+
+30 [3 Dahls, 2 Minvos, 2 Ovapes, 1 Doria, 1 Pass / Flame-Proof]
+
+BONUS STAGE [Dorias]
+
+31 [2 O'Neals, 2 Dahls, 2 Minvos, 2 Ovapes, 2 Dorias / Wall-Walker]
+
+32 [1 O'Neal, 1 Dahl, 3 Minvos, 4 Dorias, 1 Pass / Bomb]
+
+33 [2 Dahls, 2 Minvos, 1 Ovape, 3 Dorias, 2 Passes / Detonator]
+
+34 [2 Dahls, 3 Minvos, 3 Dorias, 2 Passes / Mystery]
+
+35 [2 Dahls, 1 Minvo, 1 Ovape, 3 Dorias, 2 Passes / Bomb-Walk]
+
+BONUS STAGE [Passes]
+
+36 [2 Dahls, 2 Minvos, 3 Dorias, 3 Passes / Flame-Proof]
+
+37 [2 Dahls, 1 Minvo, 1 Ovape, 3 Dorias, 3 Passes / Detonator]
+
+38 [2 Dahls, 2 Minvos, 3 Dorias, 3 Passes / Fire]
+
+39 [1 Dahl, 1 Minvo, 2 Ovapes, 2 Dorias, 4 Passes / Wall-Walker]
+
+BONUS STAGE [Pontans]
+
+40 [1 Dahl, 2 Minvos, 3 Dorias, 4 Passes / Mystery]
+
+41 [1 Dahl, 1 Minvo, 1 Ovape, 3 Dorias, 4 Passes / Detonator]
+
+42 [1 Minvo, 1 Ovape, 3 Dorias, 5 Passes / Wall-Walker]
+
+43 [1 Minvo, 1 Ovape, 2 Dorias, 6 Passes / Bomb-Walk]
+
+44 [1 Minvo, 1 Ovape, 2 Dorias, 6 Passes / Detonator]
+
+BONUS STAGE [Pontans]
+
+45 [2 Ovapes, 2 Dorias, 6 Passes / Mystery]
+
+46 [2 Ovapes, 2 Dorias, 6 Passes / Wall-Walker]
+
+47 [2 Ovapes, 2 Dorias, 6 Passes / Bomb-Walk]
+
+48 [1 Ovape, 2 Dorias, 6 Passes, 1 Pontan / Detonator]
+
+49 [2 Ovapes, 1 Doria, 6 Passes, 1 Pontan / Fire-Proof]
+
+BONUS STAGE [Pontans]
+
+50 [2 Ovapes, 1 Doria, 5 Passes, 2 Pontans / Mystery]
+
+
+Now sit back and enjoy the ending:
+
+
+"Congratulations, you have succeeded in helping Bomberman to become a human
+being.  Maybe you can recognize him in another Hudson Soft game, Good bye."
+
+That game is Lode Runner.
+
+Once the ending is over you can replay the game again with all the powerups
+that you had at the end of the last game.
+
+
+###############################################################################
+                                (G) PASSWORDS
+###############################################################################
+
+The following passwords will let you start at the indicated stage, with MAX
+Fire, MAX Bombs, and Speedup powerups.
+
+01 - NMIHPPBPCAFHABDPCPCH
+02 - HIJDIJFJDLHFLOPDJDJN
+03 - BAJDINANMJGGCPOOLOLG
+04 - DJOLBGLGKGJAHIEMNMNN
+05 - NMKGDDONMHLCGKKGKGKJ
+06 - ABGKKBPHILHFLOPCPCPC
+07 - FEBABGLEFLHFLOPCPCPA
+08 - HIFEMIIABJGGCPOBABAN
+09 - NMEFPHCMNJGGCPOBABAF
+10 - JDGKKBPHILHFLOPGKGKL
+11 - HIPCOHCMNLHFLOPEFEFG
+12 - ABJDIFJKGGJAHIEPCPCN
+13 - JDBABANOLJGGCPODJDJF
+14 - ABNMKNAIHFAJNMMKGKGF
+15 - ABIHPGLEFCNNJDBEFEFN
+16 - ABABEMKJDAFHABDCPPCN
+17 - JDDJOIIOLCNNJDBABOLH
+18 - JDNMKLGHILHFLOPGKEFH
+19 - DJABEKMPCFAJNMMOLFEL
+20 - FEGKKJFNMAFHABDABOLN
+21 - NMKGDDOIHJGGCPONMIHN
+22 - NMCPIIIOLFAJNMMGKEFF
+23 - NMPCOIIOLCNNJDBBAHIJ
+24 - NMGKKEEHILHFLOPPCGKL
+25 - HIKGDODCPGJAHIEPCGKJ
+26 - ABHIMGLBANCLFEINMIHH
+27 - MNGKKDOOLGJAHIEKGCPC
+28 - OLDJOIIKGLHFLOPEFLOL
+29 - IHJDIKMEFNCLFEINMIHF
+30 - IHDJOIIKGLHFLOPMNJDA
+31 - DJJDIDOOLFAJNMMEFLOC
+32 - IHIHPBPCPNCBOLIHIJDH
+33 - OLFEMANMNFADDJMABFEF
+34 - MNDJOODJDHLPPCKBAMNA
+35 - DJABEMKMNNCMIHIMNDJC
+36 - BADJOIIIHAFDDJDIHOLA
+37 - DJFEMPBPCGJKEFEEFBAC
+38 - DJKGDIIIHJGBOLOABFEH
+39 - DJCPIODFECNOBABABFEN
+40 - IHEFPPBGKFAIMNMOLKGJ
+41 - IHLOEHCMNNCMIHIIHOLJ
+42 - DJEFPHCMNJGBOLOABFEH
+43 - MNGKKIIOLGJKEFEKGPCJ
+44 - BAPCOMKDJJGBOLODJIHJ
+45 - OLNMKDOIHFAIMNMGKLOF
+46 - OLIHPMKNMFAIMNMABFEH
+47 - OLABEMKNMCNOBABPCEFL
+48 - OLOLBFJGKGJKEFEFEPCL
+49 - OLFEMFJGKLHPPCPLOMNL
+50 - NMABEKMKGNCLFEIIHFEL
+
+00 - BABABABABABABABABABA
+
+
+###############################################################################
+                               (H) EXPERIMENTAL
+###############################################################################
+
+For a little while now I've had a paypal link in all my FAQs at the very bottom
+here.  Mainly as a small experiment since a few other FAQ authors have also had
+the same idea.
+
+I had a few people email me before I put this link in because they wanted to
+send money, so it's here for those people.
+
+I've been getting cases of energy drinks and making some excellent progress on
+a few FAQs & maps.
+
+If you don't want to send money or can't then send me an email, it's nice to
+hear what people thought about my work and there's always room for improvement.
+
+My email address and paypal address for those that want to contribute are both
+dengelchill [AT] gmail [DOT] com
+
+Many thanks, and I hope you continue to use my work!
+
+~Dan
+Restore Page
