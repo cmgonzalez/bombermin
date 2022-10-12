@@ -36,6 +36,9 @@ udk_t k1;
 // Cuadros de Animación
 #define FRAMES 3
 
+#define ON 1
+#define OFF 0
+
 #define MAX_BOMBS 8
 
 #define BLOCK_EMPTY 0

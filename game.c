@@ -78,11 +78,14 @@ void main_loop() {
   player_lives = PLAYER_LIVES;
   player_radius = 2;
   player_bombs = 1;
-  player_bomb_walk = 0;
-  player_brick_walk = 0;
   player_speed = PLAYER_FAST;
-  player_brick_walk = 1;
-  player_hit = 0;
+
+  // player_bomb_walk = OFF;
+  // player_brick_walk = OFF;
+  player_brick_walk = ON;
+  player_bomb_walk = ON;
+
+  player_hit = OFF;
   game_stage = 1;
   game_time = 200;
   // Inicializa las entidades
@@ -355,8 +358,10 @@ void entity_anim() {
     switch (types[entity]) {
     case ENT_PLAYER:
       game_brick_walk = player_brick_walk;
+      game_bomb_walk = player_bomb_walk;
       entity_move_player();
       game_brick_walk = 0;
+      game_bomb_walk = 0;
       break;
     case ENT_BALLON:
       entity_move_ballon();
@@ -866,7 +871,6 @@ void map_scroll(unsigned char d) {
  */
 unsigned char map_empty(unsigned char l, unsigned char c) {
   unsigned char v = map_get(l, c);
-
   if ((v == BLOCK_EMPTY) || (game_brick_walk && v == BLOCK_BRICK) || (game_bomb_walk && v == BLOCK_BOMB)) {
     return 1;
   } else {
