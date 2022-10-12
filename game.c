@@ -168,13 +168,45 @@ void main_im2() {
  * horizontalmente
  */
 void draw_entity() {
-  unsigned char t;
   // Dibuja un entity
-  t = tiles[entity] + *frame;
-  // Restaura Fondo solo atributos paper y tinta verde
-  draw_restore_fast();
+
+  // Borde Izquierdo
+  if ((*col - scroll_min) == 0) {
+    // draw_restore();
+    btile_draw(0, *lin, 1);
+    btile_half_h(0, tiles[entity] + *frame, *lin, 0);
+    return;
+  }
+  // Borde Derecho
+  if ((*col - scroll_min) == 31) {
+    // draw_restore();
+    btile_draw(0, *lin, 30);
+    btile_half_h(1, tiles[entity] + *frame, *lin, 30);
+    return;
+  }
+
+  // Restaura Fondo
+  draw_restore();
+  // Restaura Fondo con el btile 0
+  // btile_draw(0, lin0, col0 - scroll_min);
   // Tile Personaje
-  btile_draw(t, *lin, *col - scroll_min);
+  btile_draw(tiles[entity] + *frame, *lin, *col - scroll_min);
+
+  // Pinta si camina sobre ladrillos
+  if (game_brick_walk) {
+    if (map_get(*lin, *col) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin, *col - scroll_min);
+    }
+    if (map_get(*lin, *col + 1) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin, *col + 1 - scroll_min);
+    }
+    if (map_get(*lin + 8, *col) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col - scroll_min);
+    }
+    if (map_get(*lin + 8, *col + 1) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col + 1 - scroll_min);
+    }
+  }
 }
 
 /*
@@ -201,22 +233,28 @@ void draw_player() {
     t = BTILE_PLAYER_VER + FRAMES + *frame;
     break;
   }
-
-  // Restaura Fondo
-  draw_restore();
+  if (*col != col0 || *lin != lin0) {
+    // Restaura Fondo
+    draw_restore();
+  }
   // Tile Personaje
   btile_draw(t, *lin, *col - scroll_min);
 
-  if (map_get(*lin, *col) == BLOCK_BRICK)
-    NIRVANAP_paintC(attrs_brick_wall, *lin, *col - scroll_min);
-  if (map_get(*lin, *col + 1) == BLOCK_BRICK)
-    NIRVANAP_paintC(attrs_brick_wall, *lin, *col + 1 - scroll_min);
-  if (map_get(*lin + 8, *col) == BLOCK_BRICK)
-    NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col - scroll_min);
-  if (map_get(*lin + 8, *col + 1) == BLOCK_BRICK)
-    NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col + 1 - scroll_min);
-  // NIRVANAP_readC(a, b, c) NIRVANAP_readC_callee(a, b, c)
-  // btile_paint(attrs_fire_yellow, *lin, *col - 1);
+  // Pinta si camina sobre ladrillos
+  if (game_brick_walk) {
+    if (map_get(*lin, *col) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin, *col - scroll_min);
+    }
+    if (map_get(*lin, *col + 1) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin, *col + 1 - scroll_min);
+    }
+    if (map_get(*lin + 8, *col) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col - scroll_min);
+    }
+    if (map_get(*lin + 8, *col + 1) == BLOCK_BRICK) {
+      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col + 1 - scroll_min);
+    }
+  }
 }
 
 /*
@@ -226,9 +264,9 @@ void draw_player() {
  * movimiento
  */
 void draw_restore() {
-  // if (*col == col0 && *lin == lin0) {
-  //   return;
-  // }
+  if (*col == col0 && *lin == lin0) {
+    return;
+  }
   if (*col != col0) {
     // Movimiento Horizontal
     if (*col > col0) {
@@ -249,12 +287,6 @@ void draw_restore() {
     }
   }
 }
-
-void draw_restore_fast() {
-  // TODO MACRO
-  btile_paint(arr_back, lin0, col0 - scroll_min);
-}
-
 /*
  * Function:  map_draw
  * --------------------
@@ -462,8 +494,6 @@ void entity_move_player() {
 
   if (inp & IN_STICK_FIRE) {
     bomb_add();
-    // frame_inc();
-    // draw_entity();
     return;
   }
   if (inp & IN_STICK_LEFT) {
@@ -537,7 +567,7 @@ void entity_move_rc() {
  *
  */
 void entity_move_ballon() {
-
+  game_brick_walk = 1;
   switch (dirs[entity]) {
   case BIT_UP:
     if (move_cup()) {
@@ -585,18 +615,6 @@ void entity_move_ballon() {
   if (*col >= scroll_min && *col <= scroll_max) {
     // Visible
     frame_inc();
-    // Borde Derecho
-    if ((*col - scroll_min) == 0) {
-      draw_restore();
-      btile_half_h(0, tiles[entity] + *frame, *lin, 0);
-      return;
-    }
-    // Borde Izquierdo
-    if ((*col - scroll_min) == 31) {
-      draw_restore();
-      btile_half_h(1, tiles[entity] + *frame, *lin, 30);
-      return;
-    }
 
     // Normal
     draw_entity();
@@ -878,6 +896,19 @@ unsigned char map_empty(unsigned char l, unsigned char c) {
   }
 }
 /*
+ * Function:  map_empty_fast
+ * --------------------
+ * Retorna si la coordenada permite desplazamiento
+ */
+unsigned char map_empty_fast(unsigned char l, unsigned char c) {
+  unsigned char v = map_get(l, c);
+  if ((v == BLOCK_EMPTY)) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+/*
  * Function:  map_restore
  * --------------------
  * Restaura dibujo de un casillero del mapa, según las coordenadas
@@ -1113,7 +1144,7 @@ void explode_anim(unsigned char b) {
     // Limpia Mapa para no confundir a la función explode
     map_set(BLOCK_EMPTY, bomb_lin[b], bomb_col[b]);
     // Limpia Pantalla
-    NIRVANAP_halt();
+    // NIRVANAP_halt();
     // Desactiva Bomba
     bomb_mode[b] = BOMB_OFF;
     bomb_col[b] = 0;
@@ -1124,7 +1155,6 @@ void explode_anim(unsigned char b) {
   default:
     break;
   }
-  NIRVANAP_halt(); // TESTING DUMP
 }
 
 /*
