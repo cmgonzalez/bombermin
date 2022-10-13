@@ -59,6 +59,9 @@ extern unsigned char nirv_attribs[] = {
     PAPER_BLACK | INK_WHITE,
 };
 
+unsigned char nirv_sp = 0;
+unsigned char draw_sp = 0;
+
 unsigned char *prisma_screen_map;
 
 // Restore buff
@@ -250,6 +253,17 @@ void btile_draw(unsigned char til, unsigned char lin, unsigned char col) {
   }
 }
 
+void btile_drawA(unsigned char til, unsigned char lin, unsigned char col) {
+  if (lin < 192 && col < 31) {
+    NIRVANAP_drawT_raw(til, lin, col);
+    ++draw_sp;
+    if (draw_sp == 4) {
+      draw_sp = 0;
+      NIRVANAP_halt();
+    }
+  }
+}
+
 void btile_draw_halt(unsigned char til, unsigned char lin, unsigned char col) {
   if (lin < 192 && col < 31) {
     NIRVANAP_halt();
@@ -291,6 +305,42 @@ void sprite_draw(unsigned char s, unsigned char t, unsigned char l, unsigned cha
     // Dibuja un sprite nirvana en el próximo frame
     NIRVANAP_spriteT(s, t, l, c);
   }
+}
+
+/*
+ * Function:  sprite_drawA
+ * --------------------
+ * Dibuja un btile usando los sprites nirvana "gratis"
+ * el dibujo se realiza en el próximo frame y sobrescribe la pantalla.
+ */
+void sprite_drawA(unsigned char t, unsigned char l, unsigned char c) {
+  if (l < 192 && c < 31) {
+    // Dibuja un sprite nirvana en el próximo frame
+    NIRVANAP_spriteT(nirv_sp, t, l, c);
+    ++nirv_sp;
+    if (nirv_sp == 8) {
+      nirv_sp = 0;
+      NIRVANAP_halt();
+    }
+  }
+}
+
+/*
+ * Function:  sprite_reset
+ * --------------------
+ * Resete los sprites nirvana
+ */
+void sprite_reset() {
+  NIRVANAP_spriteT(0, 0, 0, 0);
+  NIRVANAP_spriteT(1, 0, 0, 0);
+  NIRVANAP_spriteT(2, 0, 0, 0);
+  NIRVANAP_spriteT(3, 0, 0, 0);
+  NIRVANAP_spriteT(4, 0, 0, 0);
+  NIRVANAP_spriteT(5, 0, 0, 0);
+  NIRVANAP_spriteT(6, 0, 0, 0);
+  NIRVANAP_spriteT(7, 0, 0, 0);
+  nirv_sp = 0;
+  // NIRVANAP_halt();
 }
 
 // void btile_paint(unsigned char t, unsigned char c) {

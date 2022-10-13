@@ -150,9 +150,6 @@ unsigned char dir0;
 unsigned char col0;
 unsigned char lin0;
 
-// Para los sprites nirvana de primer plano
-unsigned char nirv_sprite;
-
 // Punteros para asignar a al entidad actual del bucle principal
 unsigned char *frame;
 unsigned char *dir;

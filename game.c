@@ -145,7 +145,7 @@ void main_loop() {
  *
  */
 void main_im2() {
-  zx_border(INK_RED);
+  zx_border(INK_WHITE);
   // Aumenta "Reloj"
   ++time;
   // Contador de Segundos
@@ -295,14 +295,7 @@ void draw_restore() {
 void map_draw() {
   unsigned int i;
   // Limpia Sprites Nirvana para evitar problemas
-  NIRVANAP_spriteT(0, 0, 0, 0);
-  NIRVANAP_spriteT(1, 0, 0, 0);
-  NIRVANAP_spriteT(2, 0, 0, 0);
-  NIRVANAP_spriteT(3, 0, 0, 0);
-  NIRVANAP_spriteT(4, 0, 0, 0);
-  NIRVANAP_spriteT(5, 0, 0, 0);
-  NIRVANAP_spriteT(6, 0, 0, 0);
-  NIRVANAP_spriteT(7, 0, 0, 0);
+  sprite_reset();
 
   // Dibuja Mapa
   lin0 = 16;
@@ -1054,6 +1047,7 @@ void bomb_add() {
       bomb_timer[b] = time + 200;
       bomb_frame[b] = 0;
       bomb_mode[b] = BOMB_INITIAL;
+      player_sound = SFX_BOMB_ADD;
     }
   }
 }
@@ -1108,6 +1102,7 @@ void explode_anim(unsigned char b) {
   case BOMB_EXPLODE1:
     if (explo_sound == 0) {
       player_sound = SFX_BOMB_EXPLO;
+      explo_sound = 1;
     }
     // Fijo Siguiente Estado
     bomb_mode[b] = BOMB_EXPLODE2;
@@ -1335,53 +1330,52 @@ void explode_check() {
  */
 void explode_draw(unsigned char b, unsigned char p) {
   unsigned char i;
-  unsigned char j;
 
   // Vertical
   i = explo_down[b];
-  j = 0;
   NIRVANAP_halt();
+
   // Explosión Centro
-  btile_draw(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b] - scroll_min);
+  btile_drawA(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b] - scroll_min);
 
   // Explosión Arriba
   i = bomb_lin[b] - 16;
   while (i >= explo_up[b]) {
-    if (!(j & 3)) {
-      NIRVANAP_halt();
-    }
-    ++j;
-    btile_draw(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
+
+    btile_drawA(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
     i -= 16;
   }
   // Explosión Abajo
   i = bomb_lin[b] + 16;
   while (i <= explo_down[b]) {
-    if (!(j & 3)) {
-      NIRVANAP_halt();
-    }
-    ++j;
-    btile_draw(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
+    btile_drawA(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
     i += 16;
   }
-  // Explosión Horizontal
+  // Explosión Izquierda
   i = explo_left[b];
   if (i == bomb_col[b]) {
     i += 2;
   }
   while (i <= explo_right[b]) {
-    if (!(j & 3)) {
-      NIRVANAP_halt();
-    }
-    ++j;
     if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_BRICK) {
-      btile_draw(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
+      btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
     }
     i += 2;
     if (i == bomb_col[b]) {
       i += 2;
     }
   }
+  while (i <= explo_right[b]) {
+    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_BRICK) {
+      btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
+    }
+    i += 2;
+    if (i == bomb_col[b]) {
+      i += 2;
+    }
+  }
+
+  NIRVANAP_halt();
   if (p == 0) {
     // Bordes de explosion solo para el primer dibujado
     // Abajo

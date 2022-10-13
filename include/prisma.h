@@ -36,28 +36,32 @@
 #define bitSet(a, b) (a |= b)
 #define bitClear(a, b) (a &= ~b)
 
-// Variables
-
+// Definiciones de Funciones
 void draw_rst_draw();
 void draw_rst_add(unsigned char, unsigned char, unsigned char);
 void draw_rst_init();
 
-// Definiciones de Funciones
+// Impresión
 void print_udg(unsigned char, unsigned char, unsigned char);
 void print_char(unsigned char ch, unsigned char r, unsigned char c);
 void print_int(unsigned int, unsigned char, unsigned char);
 void print_udg_nirv(unsigned char, unsigned char, unsigned char);
+
+// Dibujado Nirvana
+void btile_draw_halt(unsigned char, unsigned char, unsigned char);
 void btile_draw(unsigned char, unsigned char, unsigned char);
+void btile_drawA(unsigned char, unsigned char, unsigned char);
 void btile_paint(unsigned char *a, unsigned char l, unsigned char c);
 
-void btile_draw_halt(unsigned char, unsigned char, unsigned char);
-void sprite_draw(unsigned char s, unsigned char t, unsigned char l,
-                 unsigned char c);
+// Dibujado con Sprites Nirvana
+void sprite_draw(unsigned char s, unsigned char t, unsigned char l, unsigned char c);
+void sprite_drawA(unsigned char t, unsigned char l, unsigned char c);
+void sprite_reset();
+
+// Medios Sprites
 void btile_half(unsigned char, unsigned char);
-void btile_half_h(unsigned char h, unsigned char bt, unsigned char l,
-                  unsigned char c);
-void btile_half_v(unsigned char h, unsigned char bt, unsigned char l,
-                  unsigned char c);
+void btile_half_h(unsigned char h, unsigned char bt, unsigned char l, unsigned char c);
+void btile_half_v(unsigned char h, unsigned char bt, unsigned char l, unsigned char c);
 // Definiciones de Variables
 extern unsigned char nirv_attribs[];
 
