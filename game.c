@@ -560,7 +560,7 @@ void entity_move_rc() {
  *
  */
 void entity_move_ballon() {
-  game_brick_walk = 1;
+
   switch (dirs[entity]) {
   case BIT_UP:
     if (move_cup()) {
@@ -1200,11 +1200,9 @@ void explode_calc(unsigned char b) {
   if (explo_max_down[b] > 160) {
     // Máximo 160
     explo_max_down[b] = 160;
-    explo_down[b] = 160;
-  } else {
-    while (explo_down[b] < explo_max_down[b] && map_get(explo_down[b] + 16, bomb_col[b]) == BLOCK_EMPTY) {
-      explo_down[b] += 16;
-    }
+  }
+  while (explo_down[b] < explo_max_down[b] && map_get(explo_down[b] + 16, bomb_col[b]) == BLOCK_EMPTY) {
+    explo_down[b] += 16;
   }
 
   // Margen Arriba
@@ -1217,12 +1215,11 @@ void explode_calc(unsigned char b) {
   if (explo_max_up[b] > 160 || explo_max_up[b] < 32) {
     // Mínimo 8
     explo_max_up[b] = 32;
-    explo_up[b] = 32;
-  } else {
-    while (explo_up[b] > explo_max_up[b] && map_get(explo_up[b] - 16, bomb_col[b]) == BLOCK_EMPTY) {
-      explo_up[b] -= 16;
-    }
   }
+  while (explo_up[b] > explo_max_up[b] && map_get(explo_up[b] - 16, bomb_col[b]) == BLOCK_EMPTY) {
+    explo_up[b] -= 16;
+  }
+
   // Margen Izquierda
   if (explo_trigger[b] == BIT_LEFT) {
     explo_max_left[b] = bomb_col[b];
@@ -1230,16 +1227,13 @@ void explode_calc(unsigned char b) {
     explo_max_left[b] = bomb_col[b] - (player_radius << 1);
   }
   // t = bomb_col[b] - (player_radius * 2);
-  if (explo_max_left[b] > 96 || explo_max_left[b] < 2) { // MAP_WIDTH*2*3
+  if (explo_max_left[b] > 96) { // MAP_WIDTH*2*3
     // Mínimo
-    explo_max_left[b] = 2;
-    explo_left[b] = 2;
-  } else {
-    while (explo_left[b] > explo_max_left[b] && map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
-      explo_left[b] -= 2;
-    }
+    explo_max_left[b] = 0;
   }
-
+  while (explo_left[b] > explo_max_left[b] && map_get(bomb_lin[b], explo_left[b] - 2) == BLOCK_EMPTY) {
+    explo_left[b] -= 2;
+  }
   // Margen Derecha
   if (explo_trigger[b] == BIT_RIGHT) {
     explo_max_right[b] = bomb_col[b];
@@ -1250,20 +1244,10 @@ void explode_calc(unsigned char b) {
   if (explo_max_right[b] > 96) { // MAP_WIDTH*2*3
     // Máximo
     explo_max_right[b] = 96;
-    explo_right[b] = 96;
-  } else {
-    while (explo_right[b] < explo_max_right[b] && map_get(bomb_lin[b], explo_right[b] + 2) == BLOCK_EMPTY) {
-      explo_right[b] += 2;
-    }
   }
-
-  // print_char(explo_down[b], 23, 0);
-  // print_char(explo_up[b], 23, 4);
-  // print_char(explo_left[b], 23, 8);
-  // print_char(explo_right[b], 23, 12);
-
-  // print_char(bomb_lin[b], 23, 20);
-  // print_char(bomb_col[b], 23, 24);
+  while (explo_right[b] < explo_max_right[b] && map_get(bomb_lin[b], explo_right[b] + 2) == BLOCK_EMPTY) {
+    explo_right[b] += 2;
+  }
 }
 
 /*
@@ -1356,7 +1340,7 @@ void explode_draw(unsigned char b, unsigned char p) {
   if (i == bomb_col[b]) {
     i += 2;
   }
-  while (i <= explo_right[b]) {
+  while (i <= bomb_col[b]) {
     if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_BRICK) {
       btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
     }
@@ -1365,6 +1349,8 @@ void explode_draw(unsigned char b, unsigned char p) {
       i += 2;
     }
   }
+  // Explosión Derecha
+  i = bomb_col[b] + 2;
   while (i <= explo_right[b]) {
     if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_BRICK) {
       btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
@@ -1377,20 +1363,20 @@ void explode_draw(unsigned char b, unsigned char p) {
 
   NIRVANAP_halt();
   if (p == 0) {
-    // Bordes de explosion solo para el primer dibujado
-    // Abajo
+    // Dibuja bordes de explosion solo para el primer frame de la animacion de la explosión
+    // Dibuja Abajo
     if (explo_down[b] == explo_max_down[b] && explo_down[b] != bomb_lin[b]) {
       btile_half_v(1, BTILE_END_EXP, explo_down[b] + 8, bomb_col[b] - scroll_min);
     }
-    // Arriba
+    // Dibuja Arriba
     if (explo_up[b] == explo_max_up[b] && explo_up[b] != bomb_lin[b]) {
       btile_half_v(0, BTILE_END_EXP, explo_up[b], bomb_col[b] - scroll_min);
     }
-    // Izquierda
+    // Dibuja Izquierda
     if (explo_left[b] == explo_max_left[b] && explo_left[b] != bomb_col[b]) {
       btile_half_h(1, BTILE_END_EXP, bomb_lin[b], explo_left[b] - 1 - scroll_min);
     }
-    // Derecha
+    // Dibuja Derecha
     if (explo_right[b] == explo_max_right[b] && explo_right[b] != bomb_col[b]) {
       btile_half_h(0, BTILE_END_EXP, bomb_lin[b], explo_right[b] + 1 - scroll_min);
     }
@@ -1428,7 +1414,7 @@ void explode_kill(unsigned char b) {
 /*
  * Function:  explode_restore
  * --------------------
- * Mata a entidades afectadas por la explosión
+ * Restaura la pantalla despues de una explosion, con el btile 0
  *
  */
 void explode_restore(unsigned char b) {
@@ -1437,7 +1423,6 @@ void explode_restore(unsigned char b) {
   // Vertical
   i = explo_down[b];
   while (i >= explo_up[b]) {
-    // btile_paint(a, i, bomb_col[b] - scroll_min);
     btile_draw_halt(0, i, bomb_col[b] - scroll_min);
     i -= 16;
   }
@@ -1445,7 +1430,6 @@ void explode_restore(unsigned char b) {
   i = explo_left[b];
 
   while (i <= explo_right[b]) {
-    // btile_paint(a, bomb_lin[b], i - scroll_min);
     btile_draw_halt(0, bomb_lin[b], i - scroll_min);
     i += 2;
   }
@@ -1454,7 +1438,7 @@ void explode_restore(unsigned char b) {
 /*
  * Function:  print_header
  * --------------------
- * Imprime textos en la parte superior de la pantalla
+ * Imprime textos fijos en la parte superior de la pantalla
  *
  */
 void print_header() {
@@ -1478,7 +1462,7 @@ void print_time() {
 /*
  * Function:  print_score
  * --------------------
- * Imprime el puntaje
+ * Imprime el puntaje del jugador
  *
  */
 void print_score() {
@@ -1489,7 +1473,7 @@ void print_score() {
 /*
  * Function:  print_lives
  * --------------------
- * Imprime las vidas
+ * Imprime las vidas del jugador
  *
  */
 void print_lives() {
