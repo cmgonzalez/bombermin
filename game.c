@@ -25,9 +25,12 @@
  */
 
 void main(void) {
+  game_debug = 1;
+  if (!game_debug) {
+    in_wait_key();
+    in_wait_nokey();
+  }
   z80_delay_ms(25);
-  // in_wait_key();
-  // in_wait_nokey();
 
   // Inicializa controles
   k1.fire = IN_KEY_SCANCODE_SPACE;
@@ -42,10 +45,6 @@ void main(void) {
   zx_cls(PAPER_WHITE);
   printPaper(INK_WHITE);
   printInk(INK_BLACK);
-  printAt(0, 12);
-  // printf("Bombermin");
-  printAt(23, 9);
-  printf("Bombermin Demo");
 
   // Configura direcciones para los btiles y blocks(UDGs)
   NIRVANAP_tiles(_btiles);
@@ -71,39 +70,24 @@ void main(void) {
  *
  */
 void main_loop() {
-  entity = 0;
-  bomb = 0;
-  game_entities = 0;
-  // Valores iniciales de la Partida
-  player_lives = PLAYER_LIVES;
-  player_radius = 2;
-  player_bombs = 1;
-  player_speed = PLAYER_FAST;
-
-  // player_bomb_walk = OFF;
-  // player_brick_walk = OFF;
-  player_brick_walk = ON;
-  player_bomb_walk = ON;
-
-  player_hit = OFF;
-  game_stage = 1;
-  game_time = 200;
+  // Inicializa la partida
+  game_init();
   // Inicializa las entidades
   entity_init();
-  // Pantalla
-  print_header();
-  print_score();
-  print_lives();
   // Crea Mapa
   map_create();
   // Inicializa Bombas
   bomb_init();
+  // Imprime textos en Pantalla
+  print_header();
   // Dibuja el mapa
   map_draw();
+  // Imprime Footer
+  print_footer();
   // Activa NIRVANA ENGINE
   NIRVANAP_start();
   // Activa rutinas im2
-  im2_pause = 0;
+  im2_pause = OFF;
   for (;;) {
     // Imprime el tiempo restante de partida
     print_time();
@@ -193,18 +177,18 @@ void draw_entity() {
   btile_draw(tiles[entity] + *frame, *lin, *col - scroll_min);
 
   // Pinta si camina sobre ladrillos
-  if (game_brick_walk) {
-    if (map_get(*lin, *col) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin, *col - scroll_min);
+  if (game_wallwalk) {
+    if (map_get(*lin, *col) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin, *col - scroll_min);
     }
-    if (map_get(*lin, *col + 1) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin, *col + 1 - scroll_min);
+    if (map_get(*lin, *col + 1) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin, *col + 1 - scroll_min);
     }
-    if (map_get(*lin + 8, *col) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col - scroll_min);
+    if (map_get(*lin + 8, *col) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin + 8, *col - scroll_min);
     }
-    if (map_get(*lin + 8, *col + 1) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col + 1 - scroll_min);
+    if (map_get(*lin + 8, *col + 1) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin + 8, *col + 1 - scroll_min);
     }
   }
 }
@@ -241,18 +225,18 @@ void draw_player() {
   btile_draw(t, *lin, *col - scroll_min);
 
   // Pinta si camina sobre ladrillos
-  if (game_brick_walk) {
-    if (map_get(*lin, *col) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin, *col - scroll_min);
+  if (game_wallwalk) {
+    if (map_get(*lin, *col) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin, *col - scroll_min);
     }
-    if (map_get(*lin, *col + 1) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin, *col + 1 - scroll_min);
+    if (map_get(*lin, *col + 1) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin, *col + 1 - scroll_min);
     }
-    if (map_get(*lin + 8, *col) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col - scroll_min);
+    if (map_get(*lin + 8, *col) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin + 8, *col - scroll_min);
     }
-    if (map_get(*lin + 8, *col + 1) == BLOCK_BRICK) {
-      NIRVANAP_paintC(attrs_brick_wall, *lin + 8, *col + 1 - scroll_min);
+    if (map_get(*lin + 8, *col + 1) == BLOCK_WALL) {
+      NIRVANAP_paintC(attrs_wall, *lin + 8, *col + 1 - scroll_min);
     }
   }
 }
@@ -315,6 +299,42 @@ void map_draw() {
 }
 
 /*
+ * Function:  game_init
+ * --------------------
+ * Inicializa una partida
+ */
+void game_init() {
+  // Valores iniciales de la Partida
+  im2_pause = ON;
+  entity = 0;
+  bomb = 0;
+
+  game_entities = 0;
+  game_stage = 0;
+  game_time = PLAYER_TIME;
+
+  player_lives = PLAYER_LIVES;
+  player_speed = PLAYER_NORMAL;
+  if (!game_debug) {
+    player_radius = 1;
+    player_bombs = 1;
+    player_wallwalk = OFF;
+    player_bombwalk = OFF;
+    player_mystery = OFF;
+    player_fireproof = OFF;
+  } else {
+    player_radius = 8;
+    player_bombs = 8;
+    player_wallwalk = ON;
+    player_bombwalk = ON;
+    player_mystery = ON;
+    player_fireproof = ON;
+  }
+
+  player_hit = OFF;
+}
+
+/*
  * Function:  frame_inc
  * --------------------
  * Aumenta el frames de animación, vuelve a cero al llegar al Máximo FRAMES (3)
@@ -327,35 +347,56 @@ void frame_inc() {
 }
 
 /*
- * Function:  entity_getnext
+ * Function:  entity_add
  * --------------------
- * Retorna la siguiente entidad que necesita ser dibujada,
- * si no hay candidata, retorna la próxima según contador entity_im2
+ * Agrega entidades al mapa
  *
  */
-unsigned char entity_getnext() {
-  unsigned char e;
+void entity_add(unsigned char t, unsigned char c) {
+  unsigned char c0 = 0;
+  // Posiciona Entidades
+  while (c0 < c) {
+    col0 = rand() % (16 * 3);
+    lin0 = rand() % 11;
+    col0 = (col0 >> 1) << 1;
+    lin0 = lin0 << 4;
+    if (map_get(lin0, col0) == BLOCK_EMPTY) {
+      cols[entity] = col0;
+      lins[entity] = lin0;
+      types[entity] = t;
+      switch (t) {
+      case ENT_BALLON:
+        tiles[entity] = BTILE_BALLON;
+        frames[entity] = 2;
+        speeds[entity] = 9;
+        seeds[entity] = 9;
+        break;
+      case ENT_BEAKER:
+        tiles[entity] = BTILE_BEAKER;
+        frames[entity] = 2;
+        speeds[entity] = 5;
+        seeds[entity] = 1;
+        break;
+      case ENT_FACE:
+        tiles[entity] = BTILE_FACE;
+        frames[entity] = 2;
+        speeds[entity] = 3;
+        seeds[entity] = 9;
+        break;
+      case ENT_JELLY:
+        tiles[entity] = BTILE_JELLY;
+        frames[entity] = 2;
+        speeds[entity] = 16;
+        seeds[entity] = 9;
+        break;
+      default:
+        break;
+      }
 
-  ++entity_im2;
-  if (entity_im2 >= ENTITIES) {
-    entity_im2 = 1;
-  }
-  e = entity_im2;
-  while (e) {
-    if (time >= timers[e]) {
-      entity_im2 = e;
-      return e;
-    }
-
-    ++e;
-    if (e >= ENTITIES) {
-      e = 1;
-    }
-    if (e == entity_im2) {
-      return e;
+      ++entity;
+      ++c0;
     }
   }
-  return 1;
 }
 
 /*
@@ -382,19 +423,15 @@ void entity_anim() {
     lin0 = *lin;
     switch (types[entity]) {
     case ENT_PLAYER:
-      game_brick_walk = player_brick_walk;
-      game_bomb_walk = player_bomb_walk;
+      // Jugador
+      game_wallwalk = player_wallwalk;
+      game_bombwalk = player_bombwalk;
       entity_move_player();
-      game_brick_walk = 0;
-      game_bomb_walk = 0;
-      break;
-    case ENT_BALLON:
-      entity_move_ballon();
-      break;
-    case ENT_BEAKER:
-      entity_move_ballon();
+      game_wallwalk = 0;
+      game_bombwalk = 0;
       break;
     case ENT_EXPLODING:
+      // Entidad Explotando
       draw_entity();
       ++*frame;
       if (*frame == 5) {
@@ -406,6 +443,7 @@ void entity_anim() {
       }
       break;
     case ENT_DIE:
+      // Entidad Agonizando
       btile_draw(tiles[entity] + 3, *lin, *col - scroll_min);
       timers[entity] = time;
       --values[entity];
@@ -414,10 +452,14 @@ void entity_anim() {
         tiles[entity] = BTILE_DIE;
         break;
       }
+    case ENT_JELLY:
+      game_wallwalk = 1;
+      entity_move();
+      game_wallwalk = 0;
+      break;
     default:
-      frame_inc();
-      draw_entity();
-      // entity_move_ballon();
+      // Defecto
+      entity_move();
       break;
     }
   }
@@ -452,15 +494,10 @@ void entity_init() {
   while (entity < ENTITIES) {
     dir = &dirs[entity];
     entity_chdir();
-    // dirs[entity] = BIT_LEFT;
     cols[entity] = 2 + (entity * 2); // (entity * 4) - 2;
     lins[entity] = 32;
-
-    // types[entity] = 1 + (entity % 8);
-    // tiles[entity] = BTILE_BALLON + (4 * ((entity - 1) % 8));
-    types[entity] = 1;
-    tiles[entity] = BTILE_BALLON;
-    frames[entity] = 2;
+    types[entity] = ENT_OFF;
+    tiles[entity] = BTILE_COIN;
     ++entity;
   }
   // Jugador
@@ -473,6 +510,39 @@ void entity_init() {
   scroll_min = 0;
   scroll_max = 31;
 }
+
+/*
+ * Function:  entity_getnext
+ * --------------------
+ * Retorna la siguiente entidad que necesita ser dibujada,
+ * si no hay candidata, retorna la próxima según contador entity_im2
+ *
+ */
+unsigned char entity_getnext() {
+  unsigned char e;
+
+  ++entity_im2;
+  if (entity_im2 >= ENTITIES) {
+    entity_im2 = 1;
+  }
+  e = entity_im2;
+  while (e) {
+    if (time >= timers[e]) {
+      entity_im2 = e;
+      return e;
+    }
+
+    ++e;
+    if (e >= ENTITIES) {
+      e = 1;
+    }
+    if (e == entity_im2) {
+      return e;
+    }
+  }
+  return 1;
+}
+
 /*
  * Function:  entity_move_player
  * --------------------
@@ -554,12 +624,12 @@ void entity_move_rc() {
   }
 }
 /*
- * Function:  entity_move_ballon
+ * Function:  entity_move
  * --------------------
  * Mueve a los enemigos
  *
  */
-void entity_move_ballon() {
+void entity_move() {
 
   switch (dirs[entity]) {
   case BIT_UP:
@@ -611,26 +681,53 @@ void entity_move_ballon() {
 
     // Normal
     draw_entity();
-    timers[entity] = time + 5;
+    timers[entity] = time + speeds[entity];
   }
 }
-
+/*
+ * Function:  entity_chdir
+ * --------------------
+ * Cambia la dirección de una entidad
+ *
+ */
 void entity_chdir() {
-  unsigned char r = rand() % 4;
-  // zx_border(INK_RED);
-  switch (r) {
-  case 0:
-    dirs[entity] = BIT_UP;
-    break;
-  case 1:
-    dirs[entity] = BIT_DOWN;
-    break;
-  case 2:
-    dirs[entity] = BIT_LEFT;
-    break;
-  case 3:
-    dirs[entity] = BIT_RIGHT;
-    break;
+  unsigned char r;
+
+  r = rand() % 10; // 0 a 9
+  if (r < seeds[entity]) {
+    // Vuelvo en dirección contraria
+    switch (dirs[entity]) {
+    case BIT_DOWN:
+      dirs[entity] = BIT_UP;
+      break;
+    case BIT_UP:
+      dirs[entity] = BIT_DOWN;
+      break;
+    case BIT_LEFT:
+      dirs[entity] = BIT_RIGHT;
+      break;
+    case BIT_RIGHT:
+      dirs[entity] = BIT_LEFT;
+      break;
+    }
+
+  } else {
+    // Cambio dirección al azar
+    r = rand() % 4;
+    switch (r) {
+    case 0:
+      dirs[entity] = BIT_UP;
+      break;
+    case 1:
+      dirs[entity] = BIT_DOWN;
+      break;
+    case 2:
+      dirs[entity] = BIT_LEFT;
+      break;
+    case 3:
+      dirs[entity] = BIT_RIGHT;
+      break;
+    }
   }
 }
 /*
@@ -778,7 +875,7 @@ void map_create() {
       // Ladrillos al Azar
       if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
         //      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2)
-        screen[i] = BLOCK_BRICK;
+        screen[i] = BLOCK_WALL;
       }
 
       // Fin derecho del mapa para simetría
@@ -795,26 +892,12 @@ void map_create() {
   screen[MAP_WIDTH + 1] = 0;
   screen[MAP_WIDTH + 2] = 0;
   screen[2 * MAP_WIDTH + 1] = 0;
-
-  // Posiciona Entidades
+  // El primer enemigo empieza con el indice 1
   entity = 1;
-  while (entity < ENTITIES) {
-    col0 = rand() % (16 * 3);
-    lin0 = rand() % 11;
-    col0 = (col0 >> 1) << 1;
-    lin0 = lin0 << 4;
-    if (map_get(lin0, col0) == BLOCK_EMPTY) {
-      cols[entity] = col0;
-      lins[entity] = lin0;
-      ++entity;
-    }
-  }
-
-  // // Marco bordes para debug
-  // screen[0] = 3;
-  // screen[MAP_WIDTH - 1] = 3;
-  // screen[MAP_WIDTH * (MAP_HEIGHT - 1)] = 3;
-  // screen[MAP_WIDTH * MAP_HEIGHT - 1] = 3;
+  entity_add(ENT_BALLON, 1);
+  entity_add(ENT_BEAKER, 1);
+  entity_add(ENT_FACE, 1);
+  entity_add(ENT_JELLY, 1);
 }
 
 /*
@@ -882,7 +965,7 @@ void map_scroll(unsigned char d) {
  */
 unsigned char map_empty(unsigned char l, unsigned char c) {
   unsigned char v = map_get(l, c);
-  if ((v == BLOCK_EMPTY) || (game_brick_walk && v == BLOCK_BRICK) || (game_bomb_walk && v == BLOCK_BOMB)) {
+  if ((v == BLOCK_EMPTY) || (game_wallwalk && v == BLOCK_WALL) || (game_bombwalk && v == BLOCK_BOMB)) {
     return 1;
   } else {
     return 0;
@@ -1259,13 +1342,13 @@ void explode_calc(unsigned char b) {
  */
 void explode_cell(unsigned char b, unsigned char d, unsigned char l, unsigned char c) {
   switch (screen[map_calc(l, c)]) {
-  case BLOCK_BRICK:
+  case BLOCK_WALL:
     // Explota los ladrillos
     if (bomb_mode[b] != BOMB_EXPLODE3) {
-      btile_draw_halt(                     //
-          BTILE_BRICK_EXP + bomb_frame[b], // Tile
-          l,                               // Linea
-          c - scroll_min                   // Columna
+      btile_draw_halt(                    //
+          BTILE_WALL_EXP + bomb_frame[b], // Tile
+          l,                              // Linea
+          c - scroll_min                  // Columna
       );
     } else {
       btile_draw_halt(BTILE_EMPTY, l, c - scroll_min);
@@ -1341,7 +1424,7 @@ void explode_draw(unsigned char b, unsigned char p) {
     i += 2;
   }
   while (i <= bomb_col[b]) {
-    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_BRICK) {
+    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_WALL) {
       btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
     }
     i += 2;
@@ -1352,7 +1435,7 @@ void explode_draw(unsigned char b, unsigned char p) {
   // Explosión Derecha
   i = bomb_col[b] + 2;
   while (i <= explo_right[b]) {
-    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_BRICK) {
+    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_WALL) {
       btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
     }
     i += 2;
@@ -1442,12 +1525,32 @@ void explode_restore(unsigned char b) {
  *
  */
 void print_header() {
+  // Tiempo
   printAt(0, 1);
   printf("TIME");
+  // Puntaje
+  print_score();
+  // Vidas
   printAt(0, 24);
   printf("LEFT");
+  print_lives();
 }
 
+/*
+ * Function:  print_header
+ * --------------------
+ * Imprime textos fijos en la parte superior de la pantalla
+ *
+ */
+void print_footer() {
+  if (!game_debug) {
+    printAt(23, 9);
+    printf("Bombermin Demo");
+  } else {
+    printAt(23, 24);
+    printf("DEBUG");
+  }
+}
 /*
  * Function:  print_time
  * --------------------
