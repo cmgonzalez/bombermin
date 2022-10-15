@@ -362,25 +362,65 @@ void entity_add(unsigned char t, unsigned char c) {
         tiles[entity] = BTILE_BALLON;
         frames[entity] = 2;
         speeds[entity] = 9;
-        seeds[entity] = 9;
+        seeds[entity] = 9; // Tonto
+        wallwakers[entity] = OFF;
+        scores[entity] = 1;
         break;
       case ENT_BEAKER:
         tiles[entity] = BTILE_BEAKER;
         frames[entity] = 2;
         speeds[entity] = 5;
         seeds[entity] = 1;
+        wallwakers[entity] = OFF;
+        scores[entity] = 2;
+        break;
+      case ENT_LANTERN:
+        tiles[entity] = BTILE_LANTERN;
+        frames[entity] = 2;
+        speeds[entity] = 3;
+        seeds[entity] = 1;
+        wallwakers[entity] = OFF;
+        scores[entity] = 4;
         break;
       case ENT_FACE:
         tiles[entity] = BTILE_FACE;
         frames[entity] = 2;
-        speeds[entity] = 3;
-        seeds[entity] = 9;
+        speeds[entity] = 2;
+        seeds[entity] = 9; // Tonto
+        wallwakers[entity] = OFF;
+        scores[entity] = 8;
         break;
       case ENT_JELLY:
         tiles[entity] = BTILE_JELLY;
         frames[entity] = 2;
         speeds[entity] = 16;
         seeds[entity] = 9;
+        wallwakers[entity] = ON;
+        scores[entity] = 10;
+        break;
+      case ENT_GHOST:
+        tiles[entity] = BTILE_GHOST;
+        frames[entity] = 2;
+        speeds[entity] = 5;
+        seeds[entity] = 9;
+        wallwakers[entity] = ON;
+        scores[entity] = 20;
+        break;
+      case ENT_BEAR:
+        tiles[entity] = BTILE_BEAR;
+        frames[entity] = 2;
+        speeds[entity] = 5;
+        seeds[entity] = 9;
+        wallwakers[entity] = OFF;
+        scores[entity] = 40;
+        break;
+      case ENT_COIN:
+        tiles[entity] = BTILE_COIN;
+        frames[entity] = 2;
+        speeds[entity] = 5;
+        seeds[entity] = 9;
+        wallwakers[entity] = ON;
+        scores[entity] = 80;
         break;
       default:
         break;
@@ -450,14 +490,11 @@ void entity_anim() {
         tiles[entity] = BTILE_DIE;
         break;
       }
-    case ENT_JELLY:
-      game_wallwalk = 1;
-      entity_move();
-      game_wallwalk = 0;
-      break;
     default:
       // Defecto
+      game_wallwalk = wallwakers[entity];
       entity_move();
+      game_wallwalk = 0;
       break;
     }
   }
@@ -757,7 +794,8 @@ void entity_die(unsigned char e) {
     btile_draw_halt(tiles[entity] + 3, *lin, *col - scroll_min);
     timers[e] = time;
     values[e] = 3;
-    ++game_score;
+    game_score += scores[entity];
+    print_score();
   } else {
     // Player
   }
@@ -909,8 +947,12 @@ void map_create() {
   entity = 1;
   entity_add(ENT_BALLON, 1);
   entity_add(ENT_BEAKER, 1);
+  entity_add(ENT_LANTERN, 1);
   entity_add(ENT_FACE, 1);
   entity_add(ENT_JELLY, 1);
+  entity_add(ENT_GHOST, 1);
+  entity_add(ENT_BEAR, 1);
+  entity_add(ENT_COIN, 1);
 }
 
 /*
@@ -1487,9 +1529,9 @@ void explode_kill(unsigned char b) {
   // Todos
   while (e < ENTITIES) {
     if (types[e] < ENT_ACTIVE) {
-      if ((explo_left[b] <= cols[e]) &&     //
-          (explo_right[b] >= cols[e]) &&    //
-          (abs(bomb_lin[b] - lins[e]) < 16) //
+      if ((explo_left[b] <= cols[e]) &&      //
+          (explo_right[b] >= cols[e]) &&     //
+          (abs(bomb_lin[b] - lins[e]) <= 16) //
       ) {
         entity_die(e);
       }
@@ -1580,7 +1622,7 @@ void print_time() {
  */
 void print_score() {
   printAt(0, 16);
-  printf("%2i", game_score);
+  printf("%2i00", game_score);
 }
 
 /*

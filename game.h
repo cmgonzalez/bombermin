@@ -21,7 +21,7 @@ udk_t k1;
 //------------------------------------------------------------
 //------------------------------------------------------------
 // Cantidad de Entidades
-#define ENTITIES 8
+#define ENTITIES 10
 // Máxima linea nirvana
 #define MAX_LIN 168
 
@@ -182,6 +182,8 @@ unsigned char frames[ENTITIES];
 unsigned char speeds[ENTITIES];
 unsigned char seeds[ENTITIES];
 unsigned char values[ENTITIES];
+unsigned char wallwakers[ENTITIES];
+unsigned char scores[ENTITIES];
 
 // Mapa de Pantalla
 unsigned char screen[MAP_SIZE];

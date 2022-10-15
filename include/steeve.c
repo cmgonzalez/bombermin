@@ -5,7 +5,6 @@
  * sounds
  *
  * ******************************************************************************/
-unsigned char steve_border = 7;
 
 void beepSteve(unsigned char fx) __z88dk_fastcall {
 
