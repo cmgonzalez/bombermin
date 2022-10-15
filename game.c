@@ -59,6 +59,21 @@ void main(void) {
   NIRVANAP_ISR_HOOK[0] = 205;
   z80_wpoke(&NIRVANAP_ISR_HOOK[1], (unsigned int)main_im2);
 
+  // NIRVANAP_start();
+
+  // btile_hup(BTILE_BEAKER, 16, 0);
+  // btile_hdown(BTILE_BEAKER, 24, 0);
+
+  // btile_hup(BTILE_BEAKER, 8, 2);
+  // btile_hdown(BTILE_BEAKER, 16, 2);
+
+  // btile_hup(BTILE_BEAKER, 184, 2);
+  // btile_hdown(BTILE_BEAKER, 192, 2);
+
+  // btile_draw(BTILE_BEAKER, 64, 8);
+  // in_wait_key();
+  // in_wait_nokey();
+
   // Bucle principal del Juego
   main_loop();
 }
@@ -157,15 +172,15 @@ void draw_entity() {
   // Borde Izquierdo
   if ((*col - scroll_min) == 0) {
     // draw_restore();
-    btile_draw(0, *lin, 1);
-    btile_half_h(0, tiles[entity] + *frame, *lin, 0);
+    btile_draw(0, *lin, 2);
+    btile_hright(tiles[entity] + *frame, *lin, 0);
     return;
   }
   // Borde Derecho
   if ((*col - scroll_min) == 31) {
     // draw_restore();
     btile_draw(0, *lin, 30);
-    btile_half_h(1, tiles[entity] + *frame, *lin, 30);
+    btile_hleft(tiles[entity] + *frame, *lin, 31);
     return;
   }
 
@@ -175,21 +190,9 @@ void draw_entity() {
   // btile_draw(0, lin0, col0 - scroll_min);
   // Tile Personaje
   btile_draw(tiles[entity] + *frame, *lin, *col - scroll_min);
-
-  // Pinta si camina sobre ladrillos
+  // Pintado especial si camina sobre ladrillos
   if (game_wallwalk) {
-    if (map_get(*lin, *col) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin, *col - scroll_min);
-    }
-    if (map_get(*lin, *col + 1) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin, *col + 1 - scroll_min);
-    }
-    if (map_get(*lin + 8, *col) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin + 8, *col - scroll_min);
-    }
-    if (map_get(*lin + 8, *col + 1) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin + 8, *col + 1 - scroll_min);
-    }
+    draw_overwall();
   }
 }
 
@@ -223,21 +226,9 @@ void draw_player() {
   }
   // Tile Personaje
   btile_draw(t, *lin, *col - scroll_min);
-
-  // Pinta si camina sobre ladrillos
+  // Pintado especial si camina sobre ladrillos
   if (game_wallwalk) {
-    if (map_get(*lin, *col) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin, *col - scroll_min);
-    }
-    if (map_get(*lin, *col + 1) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin, *col + 1 - scroll_min);
-    }
-    if (map_get(*lin + 8, *col) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin + 8, *col - scroll_min);
-    }
-    if (map_get(*lin + 8, *col + 1) == BLOCK_WALL) {
-      NIRVANAP_paintC(attrs_wall, *lin + 8, *col + 1 - scroll_min);
-    }
+    draw_overwall();
   }
 }
 
@@ -269,6 +260,28 @@ void draw_restore() {
       // Abajo
       map_restore(((lin0 + 8) >> 4) << 4, (col0 >> 1) << 1);
     }
+  }
+}
+/*
+ * Function:  draw_overwall
+ * --------------------
+ * Efecto de dibujo sobre ladrillos, pinta con atributos y hace las lineas de los ladrillos
+ *
+ */
+void draw_overwall() {
+
+  if (map_get(*lin, *col) == BLOCK_WALL) {
+    NIRVANAP_paintC(attrs_wall, *lin, *col - scroll_min);
+  }
+  if (map_get(*lin, *col + 1) == BLOCK_WALL) {
+    NIRVANAP_paintC(attrs_wall, *lin, *col + 1 - scroll_min);
+  }
+
+  if (map_get(*lin + 8, *col) == BLOCK_WALL) {
+    NIRVANAP_paintC(attrs_wall, *lin + 8, *col - scroll_min);
+  }
+  if (map_get(*lin + 8, *col + 1) == BLOCK_WALL) {
+    NIRVANAP_paintC(attrs_wall, *lin + 8, *col + 1 - scroll_min);
   }
 }
 /*
@@ -323,7 +336,7 @@ void game_init() {
     player_mystery = OFF;
     player_fireproof = OFF;
   } else {
-    player_radius = 8;
+    player_radius = 1;
     player_bombs = 8;
     player_wallwalk = ON;
     player_bombwalk = ON;
@@ -432,14 +445,19 @@ void entity_anim() {
       break;
     case ENT_EXPLODING:
       // Entidad Explotando
-      draw_entity();
-      ++*frame;
-      if (*frame == 5) {
-        // Elimina entidad
-        types[entity] = ENT_OFF;
-        map_restore(lin0, col0);
+      // Determina si esta visible
+      if (*col >= scroll_min && *col <= scroll_max) {
+        draw_entity();
+        ++*frame;
+        if (*frame == 5) {
+          // Elimina entidad
+          types[entity] = ENT_OFF;
+          map_restore(lin0, col0);
+        } else {
+          timers[entity] = time + 5;
+        }
       } else {
-        timers[entity] = time + 5;
+        types[entity] = ENT_OFF;
       }
       break;
     case ENT_DIE:
@@ -664,7 +682,7 @@ void entity_move() {
     }
     break;
   }
-
+  // Limpia orillas al dejar la pantalla
   if (*col == (scroll_min + 32)) {
     map_restore(lin0, scroll_min + 30);
     return;
@@ -1449,19 +1467,19 @@ void explode_draw(unsigned char b, unsigned char p) {
     // Dibuja bordes de explosion solo para el primer frame de la animacion de la explosión
     // Dibuja Abajo
     if (explo_down[b] == explo_max_down[b] && explo_down[b] != bomb_lin[b]) {
-      btile_half_v(1, BTILE_END_EXP, explo_down[b] + 8, bomb_col[b] - scroll_min);
+      btile_hdown(BTILE_END_EXP, explo_down[b] + 8, bomb_col[b] - scroll_min);
     }
     // Dibuja Arriba
     if (explo_up[b] == explo_max_up[b] && explo_up[b] != bomb_lin[b]) {
-      btile_half_v(0, BTILE_END_EXP, explo_up[b], bomb_col[b] - scroll_min);
+      btile_hup(BTILE_END_EXP, explo_up[b], bomb_col[b] - scroll_min);
     }
     // Dibuja Izquierda
     if (explo_left[b] == explo_max_left[b] && explo_left[b] != bomb_col[b]) {
-      btile_half_h(1, BTILE_END_EXP, bomb_lin[b], explo_left[b] - 1 - scroll_min);
+      btile_hleft(BTILE_END_EXP, bomb_lin[b], explo_left[b] - 1 - scroll_min);
     }
     // Dibuja Derecha
     if (explo_right[b] == explo_max_right[b] && explo_right[b] != bomb_col[b]) {
-      btile_half_h(0, BTILE_END_EXP, bomb_lin[b], explo_right[b] + 1 - scroll_min);
+      btile_hright(BTILE_END_EXP, bomb_lin[b], explo_right[b] + 1 - scroll_min);
     }
   }
 }

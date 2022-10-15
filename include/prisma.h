@@ -55,13 +55,15 @@ void btile_paint(unsigned char *a, unsigned char l, unsigned char c);
 
 // Dibujado con Sprites Nirvana
 void sprite_draw(unsigned char s, unsigned char t, unsigned char l, unsigned char c);
-void sprite_drawA(unsigned char t, unsigned char l, unsigned char c);
+void sprite_drawA(unsigned char bt, unsigned char l, unsigned char c);
 void sprite_reset();
 
 // Medios Sprites
-void btile_half(unsigned char, unsigned char);
-void btile_half_h(unsigned char h, unsigned char bt, unsigned char l, unsigned char c);
-void btile_half_v(unsigned char h, unsigned char bt, unsigned char l, unsigned char c);
+void btile_hleft(unsigned char bt, unsigned char l, unsigned char c);
+void btile_hright(unsigned char bt, unsigned char l, unsigned char c);
+void btile_hup(unsigned char bt, unsigned char l, unsigned char c);
+void btile_hdown(unsigned char bt, unsigned char l, unsigned char c);
+
 // Definiciones de Variables
 extern unsigned char nirv_attribs[];
 

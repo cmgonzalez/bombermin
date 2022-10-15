@@ -418,6 +418,9 @@ void explode_kill(unsigned char b);
 void explode_cell(unsigned char b, unsigned char d, unsigned char l, unsigned char c);
 void explode_check();
 
+// Testing
+void plot(unsigned char x, unsigned char y);
+
 /*
 ************************************************************
 Notas Técnicas - Zx Spectrum

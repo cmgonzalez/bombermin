@@ -125,120 +125,172 @@ void print_udg_nirv(unsigned char ch, unsigned char l, unsigned char c) {
 }
 
 /*
- * Function:  btile_half
- * --------------------
- * Dibuja un btile en el borde de la pantalla, 8px a la izq y los otros 8px a la
- * derecha
- *
- */
-void btile_half(unsigned char bt, unsigned char l) {
-  unsigned char *bdst;
-  unsigned char *bsrc;
-  unsigned char lin_end;
-  bsrc = &btiles[bt * 48];
-  // Dibuja Pixeles en cada orilla de la pantalla
-  l = l - 8;
-  lin_end = l + 16;
-  while (l < lin_end) {
-    if (l < 192) {
-      bdst = zx_py2saddr_fastcall(l);
-      *(bdst) = *(bsrc + 1);
-      *(bdst + 31) = *(bsrc);
-    }
-    ++l;
-    bsrc += 2;
-  }
-  // Pinta atributos
-  NIRVANAP_paintC(bsrc + 8, l - 8, 0);
-  NIRVANAP_paintC(bsrc + 12, l, 0);
-
-  NIRVANAP_paintC(bsrc + 0, l - 8, 31);
-  NIRVANAP_paintC(bsrc + 4, l, 31);
-}
-
-/*
- * Function:  btile_half_h
+ * Function:  btile_hleft
  * --------------------
  * Dibuja un medio btile horizontal (8px)
- * h = 0 derecha  h = 1 izquierda
  *
  */
-void btile_half_h(unsigned char h, unsigned char bt, unsigned char l, unsigned char c) {
-  unsigned char *bdst;
-  unsigned char *bsrc;
-  unsigned char lin_end;
-  if (l < 192 && c < 31) {
-    // bsrc = &btiles[bt * 48];
-    // bsrc = &btiles[(bt * 32) + (bt * 16)];
-    bsrc = &btiles[(bt << 5) + (bt << 4)];
-
-    // Dibuja Pixeles en cada orilla de la pantalla
+void btile_hleft(unsigned char bt, unsigned char l, unsigned char c) {
+  unsigned char *d0; // Destino
+  unsigned char *d1; // Destino
+  unsigned char *s;  // Origen
+  if (l < 192 && c < 32) {
+    // Cambia coordenada nirvana a pantalla normal
     l = l - 8;
-    lin_end = l + 16;
-    while (l < lin_end) {
-      if (l < 192) {
-        bdst = zx_py2saddr_fastcall(l);
-        if (h) {
-          *(bdst + c + 1) = *(bsrc);
-        } else {
-          *(bdst + c) = *(bsrc + 1);
-        }
-      }
-      ++l;
-      bsrc += 2;
-    }
-    // Pinta atributos
-    if (h) {
-      NIRVANAP_paintC(bsrc, l - 8, c + 1);
-      NIRVANAP_paintC(bsrc + 4, l, c + 1);
-    } else {
-      NIRVANAP_paintC(bsrc + 8, l - 8, c);
-      NIRVANAP_paintC(bsrc + 12, l, c);
-    }
+    // btile Origen
+    // s = &btiles[0] + (t * 48); => t*16 + t*8
+    s = &btiles[((bt << 5) + (bt << 4))];
+    // Destino pantalla optimizado para mod 8
+    d0 = zx_py2saddr(l) + c;
+    d1 = zx_saddrcdown(d0);
+
+    // Atributos
+    NIRVANAP_paintC(s + 40, l + 8, c);
+    NIRVANAP_paintC(s + 44, l + 16, c);
+    // Pixeles
+    *(d0) = *(s);             // b0
+    *(d0 += 256) = *(s += 2); // b1
+    *(d0 += 256) = *(s += 2); // b2
+    *(d0 += 256) = *(s += 2); // b3
+    *(d0 += 256) = *(s += 2); // b4
+    *(d0 += 256) = *(s += 2); // b5
+    *(d0 += 256) = *(s += 2); // b6
+    *(d0 += 256) = *(s += 2); // b7
+
+    *(d1) = *(s += 2);        // b8
+    *(d1 += 256) = *(s += 2); // b9
+    *(d1 += 256) = *(s += 2); // b10
+    *(d1 += 256) = *(s += 2); // b11
+    *(d1 += 256) = *(s += 2); // b12
+    *(d1 += 256) = *(s += 2); // b13
+    *(d1 += 256) = *(s += 2); // b14
+    *(d1 += 256) = *(s += 2); // b15
   }
 }
 
 /*
- * Function:  btile_half_v
+ * Function:  btile_hleft
+ * --------------------
+ * Dibuja un medio btile horizontal (8px)
+ *
+ */
+void btile_hright(unsigned char bt, unsigned char l, unsigned char c) {
+  unsigned char *d0; // Destino
+  unsigned char *d1; // Destino
+  unsigned char *s;  // Origen
+  if (l < 192 && c < 32) {
+    // Cambia coordenada nirvana a pantalla normal
+    l = l - 8;
+    // btile Origen
+    // s = &btiles[0] + (t * 48); => t*16 + t*8
+    s = &btiles[((bt << 5) + (bt << 4))];
+    // Destino pantalla optimizado para mod 8
+    d0 = zx_py2saddr(l) + c;
+    d1 = zx_saddrcdown(d0);
+
+    NIRVANAP_paintC(s + 32, l + 8, c);
+    NIRVANAP_paintC(s + 36, l + 16, c);
+    // Pixeles
+    *(d0) = *(++s);           // b0
+    *(d0 += 256) = *(s += 2); // b1
+    *(d0 += 256) = *(s += 2); // b2
+    *(d0 += 256) = *(s += 2); // b3
+    *(d0 += 256) = *(s += 2); // b4
+    *(d0 += 256) = *(s += 2); // b5
+    *(d0 += 256) = *(s += 2); // b6
+    *(d0 += 256) = *(s += 2); // b7
+
+    *(d1) = *(s += 2);        // b8
+    *(d1 += 256) = *(s += 2); // b9
+    *(d1 += 256) = *(s += 2); // b10
+    *(d1 += 256) = *(s += 2); // b11
+    *(d1 += 256) = *(s += 2); // b12
+    *(d1 += 256) = *(s += 2); // b13
+    *(d1 += 256) = *(s += 2); // b14
+    *(d1 += 256) = *(s += 2); // b15
+  }
+}
+/*
+ * Function:  btile_hup
+ * --------------------
+ * Dibuja un medio btile vertical (8px)
+ *
+ */
+void btile_hup(unsigned char bt, unsigned char l, unsigned char c) {
+  unsigned char *d; // Destino
+
+  unsigned char *s; // Origen
+  if (l >= 8 && l <= 192 && c < 31) {
+    // Cambia coordenada nirvana a pantalla normal
+    l = l - 8;
+    // btile Origen
+    // s = &btiles[0] + (t * 48); => t*16 + t*8
+    s = &btiles[((bt << 5) + (bt << 4))];
+    // Destino pantalla optimizado para mod 8
+    d = zx_py2saddr(l) + c;
+
+    // Atributos
+    NIRVANAP_paintC(s + 32, l + 8, c);
+    NIRVANAP_paintC(s + 40, l + 8, c + 1);
+    // Pixeles
+    *(d) = *(s);          // b0
+    *(d + 1) = *(++s);    // b1
+    *(d += 256) = *(++s); // b2
+    *(d + 1) = *(++s);    // b3
+    *(d += 256) = *(++s); // b4
+    *(d + 1) = *(++s);    // b5
+    *(d += 256) = *(++s); // b6
+    *(d + 1) = *(++s);    // b7
+    *(d += 256) = *(++s); // b8
+    *(d + 1) = *(++s);    // b9
+    *(d += 256) = *(++s); // b10
+    *(d + 1) = *(++s);    // b11
+    *(d += 256) = *(++s); // b12
+    *(d + 1) = *(++s);    // b13
+    *(d += 256) = *(++s); // b14
+    *(d + 1) = *(++s);    // b15
+  }
+}
+/*
+ * Function:  btile_hdown
  * --------------------
  * Dibuja un medio btile vertical (8px)
  * h = 0 derecha  h = 1 izquierda
  *
  */
-void btile_half_v(unsigned char h, unsigned char bt, unsigned char l, unsigned char c) {
-  unsigned char *bdst;
-  unsigned char *bsrc;
-  unsigned char lin_end;
-  if (l < 192 && c < 31) {
-    // Dibuja Pixeles en cada orilla de la pantalla
-    l = l - 8;
-    lin_end = l + 8;
-    if (h) {
-      // Mitad Inferior
-      bsrc = &btiles[((bt << 5) + (bt << 4)) + 16];
-    } else {
-      // Mitad Superior
-      bsrc = &btiles[(bt << 5) + (bt << 4)];
-    }
+void btile_hdown(unsigned char bt, unsigned char l, unsigned char c) {
+  unsigned char *d; // Destino
 
-    while (l < lin_end) {
-      if (l < 192) {
-        bdst = zx_py2saddr_fastcall(l);
-        *(bdst + c) = *(bsrc);
-        *(bdst + c + 1) = *(bsrc + 1);
-      }
-      ++l;
-      bsrc += 2;
-    }
-    // Pinta atributos
-    bsrc = &btiles[(bt << 5) + (bt << 4) + 32];
-    if (h) {
-      NIRVANAP_paintC(bsrc + 4, l, c);
-      NIRVANAP_paintC(bsrc + 12, l, c + 1);
-    } else {
-      NIRVANAP_paintC(bsrc + 0, l, c);
-      NIRVANAP_paintC(bsrc + 8, l, c + 1);
-    }
+  unsigned char *s; // Origen
+  if (l >= 8 && l <= 192 && c < 31) {
+    // Cambia coordenada nirvana a pantalla normal
+    l = l - 8;
+    // btile Origen
+    // s = &btiles[0] + (t * 48); => t*16 + t*8
+    s = &btiles[((bt << 5) + (bt << 4))];
+    // Destino pantalla optimizado para mod 8
+    d = zx_py2saddr(l) + c;
+
+    // Atributos
+    NIRVANAP_paintC(s + 36, l + 8, c);
+    NIRVANAP_paintC(s + 44, l + 8, c + 1);
+    // Pixeles
+    *(d) = *(s += 16);    // b0
+    *(d + 1) = *(++s);    // b1
+    *(d += 256) = *(++s); // b2
+    *(d + 1) = *(++s);    // b3
+    *(d += 256) = *(++s); // b4
+    *(d + 1) = *(++s);    // b5
+    *(d += 256) = *(++s); // b6
+    *(d + 1) = *(++s);    // b7
+    *(d += 256) = *(++s); // b8
+    *(d + 1) = *(++s);    // b9
+    *(d += 256) = *(++s); // b10
+    *(d + 1) = *(++s);    // b11
+    *(d += 256) = *(++s); // b12
+    *(d + 1) = *(++s);    // b13
+    *(d += 256) = *(++s); // b14
+    *(d + 1) = *(++s);    // b15
   }
 }
 /*
@@ -283,7 +335,8 @@ void btile_draw_l(unsigned char til, unsigned char lin, unsigned char col) {
       NIRVANAP_drawT_raw(til, lin, col);
     } else {
       // Dibuja btile en la columna 31 y 0 para efecto de loop
-      btile_half(til, lin);
+      btile_hright(til, lin, 0);
+      btile_hleft(til, lin, 31);
     }
   }
 }
@@ -307,23 +360,23 @@ void sprite_draw(unsigned char s, unsigned char t, unsigned char l, unsigned cha
   }
 }
 
-/*
- * Function:  sprite_drawA
- * --------------------
- * Dibuja un btile usando los sprites nirvana "gratis"
- * el dibujo se realiza en el próximo frame y sobrescribe la pantalla.
- */
-void sprite_drawA(unsigned char t, unsigned char l, unsigned char c) {
-  if (l < 192 && c < 31) {
-    // Dibuja un sprite nirvana en el próximo frame
-    NIRVANAP_spriteT(nirv_sp, t, l, c);
-    ++nirv_sp;
-    if (nirv_sp == 8) {
-      nirv_sp = 0;
-      NIRVANAP_halt();
-    }
-  }
-}
+// /*
+//  * Function:  sprite_drawA
+//  * --------------------
+//  * Dibuja un btile usando los sprites nirvana "gratis"
+//  * el dibujo se realiza en el próximo frame y sobrescribe la pantalla.
+//  */
+// void sprite_drawA(unsigned char t, unsigned char l, unsigned char c) {
+//   if (l < 192 && c < 31) {
+//     // Dibuja un sprite nirvana en el próximo frame
+//     NIRVANAP_spriteT(nirv_sp, t, l, c);
+//     ++nirv_sp;
+//     if (nirv_sp == 8) {
+//       nirv_sp = 0;
+//       NIRVANAP_halt();
+//     }
+//   }
+// }
 
 /*
  * Function:  sprite_reset
@@ -371,45 +424,46 @@ void sprite_reset() {
 //   }
 // }
 
-void draw_rst_init() {
-  // Reinicia contador
-  rst_i = 0;
-}
+// void draw_rst_init() {
+//   // Reinicia contador
+//   rst_i = 0;
+// }
 
-void draw_rst_add(unsigned char t, unsigned char l, unsigned char c) {
-  unsigned char j;
-  if (c < 32 && l < 192) {
+// void draw_rst_add(unsigned char t, unsigned char l, unsigned char c) {
+//   unsigned char j;
+//   if (c < 32 && l < 192) {
 
-    j = 0;
-    while (j < rst_i) {
-      if (l == rst_l[j] && c == rst_c[j]) {
-        rst_t[j] = t;
-        rst_l[j] = l;
-        rst_c[j] = c;
-        return;
-      }
-      ++j;
-    }
+//     j = 0;
+//     while (j < rst_i) {
+//       if (l == rst_l[j] && c == rst_c[j]) {
+//         rst_t[j] = t;
+//         rst_l[j] = l;
+//         rst_c[j] = c;
+//         return;
+//       }
+//       ++j;
+//     }
 
-    rst_t[rst_i] = t;
-    rst_l[rst_i] = l;
-    rst_c[rst_i] = c;
-    ++rst_i;
-    if (rst_i >= MAX_DRAW) {
-      rst_i = 0;
-    }
-  }
-}
+//     rst_t[rst_i] = t;
+//     rst_l[rst_i] = l;
+//     rst_c[rst_i] = c;
+//     ++rst_i;
+//     if (rst_i >= MAX_DRAW) {
+//       rst_i = 0;
+//     }
+//   }
+// }
 
-void draw_rst_draw() {
-  unsigned char i;
-  i = 0;
-  while (i < rst_i) {
-    if (rst_c[i] < 31) {
-      NIRVANAP_drawT_raw(rst_t[i], rst_l[i], rst_c[i]);
-    } else {
-      btile_half(rst_t[i], rst_l[i]);
-    }
-    ++i;
-  }
-}
+// void draw_rst_draw() {
+//   unsigned char i;
+//   i = 0;
+//   while (i < rst_i) {
+//     if (rst_c[i] < 31) {
+//       NIRVANAP_drawT_raw(rst_t[i], rst_l[i], rst_c[i]);
+//     } else {
+//       btile_half_v(0, rst_t[i], rst_l[i], 31);
+//       btile_half_v(1, rst_t[i], rst_l[i], 0);
+//     }
+//     ++i;
+//   }
+// }
