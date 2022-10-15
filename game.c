@@ -886,8 +886,8 @@ void map_create() {
         screen[i] = BLOCK_SOLID;
       }
       // Ladrillos al Azar
-      //  if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
-      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
+      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
+        // if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
         screen[i] = BLOCK_WALL;
       }
 
@@ -1195,10 +1195,12 @@ void explode_anim(unsigned char b) {
     explode_kill(b);
     // Fijo el frame para la animación de los ladrillos
     bomb_frame[b] = 0;
+    im2_pause = 1;
     // Dibuja
     explode_draw(b, 0);
     // Explota Bordes
     explode_edges(b);
+    im2_pause = 0;
     break;
   case BOMB_EXPLODE1:
     if (explo_sound == 0) {
@@ -1212,9 +1214,11 @@ void explode_anim(unsigned char b) {
     // Fijo el frame para la animación de los ladrillos
     bomb_frame[b] = 1;
     // Dibuja
+    im2_pause = 1;
     explode_draw(b, 8);
     // Explota Bordes
     explode_edges(b);
+    im2_pause = 0;
     break;
   case BOMB_EXPLODE2:
     // Fijo Siguiente Estado
@@ -1223,17 +1227,21 @@ void explode_anim(unsigned char b) {
     explode_kill(b);
     // Fijo el frame para la animación de los ladrillos
     bomb_frame[b] = 2;
+    im2_pause = 1;
     // Dibuja
     explode_draw(b, 16);
     // Explota Bordes
     explode_edges(b);
     // Siguiente Animación
+    im2_pause = 0;
     break;
   case BOMB_EXPLODE3:
     // Fijo Siguiente Estado
     // Restauro
+    im2_pause = 1;
     explode_restore(b);
     explode_edges(b);
+    im2_pause = 0;
     // Limpia Mapa para no confundir a la función explode
     map_set(BLOCK_EMPTY, bomb_lin[b], bomb_col[b]);
     // Limpia Pantalla
@@ -1396,9 +1404,7 @@ void explode_check() {
   while (b < MAX_BOMBS) {
     if (bomb_timer[b] != 0 && time > bomb_timer[b]) {
       explo_trigger[b] = 0;
-      im2_pause = 1;
       explode_anim(b);
-      im2_pause = 0;
       ++c;
     }
     ++b;

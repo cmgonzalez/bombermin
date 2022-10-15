@@ -5,6 +5,8 @@
  * sounds
  *
  * ******************************************************************************/
+unsigned char steve_border = 7;
+
 void beepSteve(unsigned char fx) __z88dk_fastcall {
 
   // clang-format off
@@ -70,6 +72,7 @@ void beepSteve(unsigned char fx) __z88dk_fastcall {
             gain:
                 call random
                 and 0x10
+                or 7 ;border
                 out (0xfe),a
                 ld c,2
     
@@ -92,6 +95,7 @@ void beepSteve(unsigned char fx) __z88dk_fastcall {
     
             sonlp:
                 ld e,h
+                or 7 ;border
                 out (0xfe),a
                 xor 0x10
     
