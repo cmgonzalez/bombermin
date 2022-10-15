@@ -886,8 +886,8 @@ void map_create() {
         screen[i] = BLOCK_SOLID;
       }
       // Ladrillos al Azar
-      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
-        //      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2)
+      //  if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY) {
+      if (rand() & 0b00000001 && screen[i] == BLOCK_EMPTY && lin0 > 2) {
         screen[i] = BLOCK_WALL;
       }
 
@@ -1415,18 +1415,14 @@ void explode_check() {
  */
 void explode_draw(unsigned char b, unsigned char p) {
   unsigned char i;
-
   // Vertical
   i = explo_down[b];
   NIRVANAP_halt();
-
   // Explosión Centro
   btile_drawA(BTILE_EXPLO + p, bomb_lin[b], bomb_col[b] - scroll_min);
-
   // Explosión Arriba
   i = bomb_lin[b] - 16;
   while (i >= explo_up[b]) {
-
     btile_drawA(BTILE_EXPLO + p + 1, i, bomb_col[b] - scroll_min);
     i -= 16;
   }
@@ -1441,25 +1437,15 @@ void explode_draw(unsigned char b, unsigned char p) {
   if (i == bomb_col[b]) {
     i += 2;
   }
-  while (i <= bomb_col[b]) {
-    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_WALL) {
-      btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
-    }
+  while (i < bomb_col[b]) {
+    btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
     i += 2;
-    if (i == bomb_col[b]) {
-      i += 2;
-    }
   }
   // Explosión Derecha
   i = bomb_col[b] + 2;
   while (i <= explo_right[b]) {
-    if (map_get(bomb_lin[b], i - scroll_min) != BLOCK_WALL) {
-      btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
-    }
+    btile_drawA(BTILE_EXPLO + p + 2, bomb_lin[b], i - scroll_min);
     i += 2;
-    if (i == bomb_col[b]) {
-      i += 2;
-    }
   }
 
   NIRVANAP_halt();
