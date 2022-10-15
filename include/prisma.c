@@ -64,11 +64,11 @@ unsigned char draw_sp = 0;
 
 unsigned char *prisma_screen_map;
 
-// Restore buff
-unsigned char rst_t[MAX_DRAW];
-unsigned char rst_l[MAX_DRAW];
-unsigned char rst_c[MAX_DRAW];
-unsigned char rst_i;
+// // Restore buff
+// unsigned char rst_t[MAX_DRAW];
+// unsigned char rst_l[MAX_DRAW];
+// unsigned char rst_c[MAX_DRAW];
+// unsigned char rst_i;
 
 /*
  * Function:  print_udg

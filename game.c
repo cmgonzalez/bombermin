@@ -104,6 +104,7 @@ void main_loop() {
   // Activa rutinas im2
   im2_pause = OFF;
   for (;;) {
+
     // Imprime el tiempo restante de partida
     print_time();
     // Anima las Bombas TODO animación mas lenta
@@ -123,12 +124,8 @@ void main_loop() {
     }
     // Debug al apretar el Enter
     if (in_inkey() == 13) {
-      printAt(0, 6);
-      printf("L%3iC%3i", *lin, *col);
-      z80_delay_ms(50);
-      print_char(sfx, 1, 0);
+      print_char(sfx, 23, 0);
       beepSteve(sfx);
-
       ++sfx;
       if (sfx > 16) {
         sfx = 1;
@@ -167,23 +164,6 @@ void main_im2() {
  * horizontalmente
  */
 void draw_entity() {
-  // Dibuja un entity
-
-  // Borde Izquierdo
-  if ((*col - scroll_min) == 0) {
-    // draw_restore();
-    btile_draw(0, *lin, 2);
-    btile_hright(tiles[entity] + *frame, *lin, 0);
-    return;
-  }
-  // Borde Derecho
-  if ((*col - scroll_min) == 31) {
-    // draw_restore();
-    btile_draw(0, *lin, 30);
-    btile_hleft(tiles[entity] + *frame, *lin, 31);
-    return;
-  }
-
   // Restaura Fondo
   draw_restore();
   // Restaura Fondo con el btile 0
@@ -270,18 +250,17 @@ void draw_restore() {
  */
 void draw_overwall() {
 
-  if (map_get(*lin, *col) == BLOCK_WALL) {
+  if (screen[map_calc(*lin, *col)] == BLOCK_WALL) {
     NIRVANAP_paintC(attrs_wall, *lin, *col - scroll_min);
   }
-  if (map_get(*lin, *col + 1) == BLOCK_WALL) {
-    NIRVANAP_paintC(attrs_wall, *lin, *col + 1 - scroll_min);
+  if (screen[map_calc(*lin, 1 + *col)] == BLOCK_WALL) {
+    NIRVANAP_paintC(attrs_wall, *lin, 1 + *col - scroll_min);
   }
-
-  if (map_get(*lin + 8, *col) == BLOCK_WALL) {
+  if (screen[map_calc(8 + *lin, *col)] == BLOCK_WALL) {
     NIRVANAP_paintC(attrs_wall, *lin + 8, *col - scroll_min);
   }
-  if (map_get(*lin + 8, *col + 1) == BLOCK_WALL) {
-    NIRVANAP_paintC(attrs_wall, *lin + 8, *col + 1 - scroll_min);
+  if (screen[map_calc(8 + *lin, 1 + *col)] == BLOCK_WALL) {
+    NIRVANAP_paintC(attrs_wall, *lin + 8, 1 + *col - scroll_min);
   }
 }
 /*
@@ -306,7 +285,8 @@ void map_draw() {
       col0 += 2;
     }
     ++foo;
-    i = foo * (16 * 3);
+    // i = foo * (16 * 3);
+    i = (foo << 5) + (foo << 4);
     lin0 += 16;
   }
 }
@@ -336,7 +316,7 @@ void game_init() {
     player_mystery = OFF;
     player_fireproof = OFF;
   } else {
-    player_radius = 1;
+    player_radius = 4;
     player_bombs = 8;
     player_wallwalk = ON;
     player_bombwalk = ON;
@@ -683,15 +663,30 @@ void entity_move() {
     break;
   }
   // Limpia orillas al dejar la pantalla
+  // Borde Derecho
+
+  if (*col == (scroll_min + 31)) {
+    map_restore(*lin, scroll_min + 30);
+    btile_hleft(tiles[entity] + *frame, *lin, 31);
+    return;
+  }
+
   if (*col == (scroll_min + 32)) {
     map_restore(lin0, scroll_min + 30);
     return;
   }
+  // Borde Izquierdo
   if (*col == (scroll_min - 1)) {
+    // Dibuja Mitad
+    map_restore(lin0, scroll_min);
+    btile_hright(tiles[entity] + *frame, *lin, 0);
+    return;
+  }
+  if (*col == (scroll_min - 2)) {
+    // Limpia
     map_restore(lin0, scroll_min);
     return;
   }
-
   // Determina si esta visible
   if (*col >= scroll_min && *col <= scroll_max) {
     // Visible
@@ -924,7 +919,12 @@ void map_create() {
  * calcula un indice del mapa a partir de las coordenadas l,c , la columna es
  * relativa al mapa no la pantalla.
  */
-unsigned int map_calc(unsigned char l, unsigned char c) { return ((l - 16 >> 4) * MAP_WIDTH) + (c >> 1); }
+unsigned int map_calc(unsigned char l, unsigned char c) {
+  //
+  // return ((l - 16 >> 4) * MAP_WIDTH) + (c >> 1);
+  unsigned v = (l - 16 >> 4);
+  return (v << 5) + (v << 4) + (c >> 1);
+}
 
 /*
  * Function:  map_get
@@ -1475,7 +1475,7 @@ void explode_draw(unsigned char b, unsigned char p) {
     }
     // Dibuja Izquierda
     if (explo_left[b] == explo_max_left[b] && explo_left[b] != bomb_col[b]) {
-      btile_hleft(BTILE_END_EXP, bomb_lin[b], explo_left[b] - 1 - scroll_min);
+      btile_hleft(BTILE_END_EXP, bomb_lin[b], explo_left[b] - scroll_min);
     }
     // Dibuja Derecha
     if (explo_right[b] == explo_max_right[b] && explo_right[b] != bomb_col[b]) {

@@ -29,7 +29,7 @@ udk_t k1;
 #define MIN_LIN 248
 
 // Mapa de Pantalla 16 columnas por 11 filas, para btiles de 16x16 pixeles
-#define MAP_WIDTH 16 * 3
+#define MAP_WIDTH (16 * 3)
 #define MAP_HEIGHT 11
 #define MAP_SIZE MAP_WIDTH *MAP_HEIGHT
 
@@ -59,7 +59,7 @@ udk_t k1;
 // Btiles asociados a las entidades
 #define BTILE_EMPTY 0
 #define BTILE_EXPLO 24
-#define BTILE_BOMB 27
+#define BTILE_BOMB 29
 #define BTILE_WALL_EXP 37
 #define BTILE_END_EXP 5
 
@@ -210,8 +210,8 @@ unsigned char arr_fire_yellow[4] = {
 };
 
 unsigned char arr_wall[4] = {
-    PAPER_WHITE | INK_BLACK | BRIGHT,
     PAPER_WHITE | INK_BLACK,
+    PAPER_WHITE | INK_BLACK | BRIGHT,
     PAPER_WHITE | INK_BLACK | BRIGHT,
     PAPER_WHITE | INK_BLACK,
 };
