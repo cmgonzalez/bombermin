@@ -41,11 +41,21 @@ udk_t k1;
 
 #define MAX_BOMBS 8
 
+// Bloques
 #define BLOCK_EMPTY 0
-#define BLOCK_SOLID 1
-#define BLOCK_WALL 2
-#define BLOCK_OUT 3
-#define BLOCK_BOMB 27
+#define POW_DOOR 1 // Puerta
+#define POW_BOMB 2 // Bomb
+#define POW_FIRE 3 // Fire
+#define POW_DETONATOR 4 // Detonator
+#define POW_SPEEDUP 5 // Speedup
+#define POW_BOMBWALK 6 // Bomb-Walk
+#define POW_WALLWALK 7 // Wall-Walk
+#define POW_MYSTERY 8 // Mystery
+#define POW_FIREPROOF 9 // Fire-Proof
+#define BLOCK_BOMB 10
+#define BLOCK_WALL 13
+#define BLOCK_SOLID 14
+#define BLOCK_OUT 15
 
 // Bombas
 #define BOMB_ANIM_TIME 5
@@ -58,23 +68,24 @@ udk_t k1;
 
 // Btiles asociados a las entidades
 #define BTILE_EMPTY 0
-#define BTILE_EXPLO 24
-#define BTILE_BOMB 29
-#define BTILE_WALL_EXP 37
-#define BTILE_END_EXP 5
+#define BTILE_EXPLO 16
+#define BTILE_BOMB 10
 
-#define BTILE_PLAYER_HOR 8
-#define BTILE_PLAYER_VER 16
+#define BTILE_WALL_EXP 26
+#define BTILE_END_EXP 25
 
-#define BTILE_BALLON 44
-#define BTILE_BEAKER 44 + 4
-#define BTILE_LANTERN 44 + 8
-#define BTILE_FACE 44 + 12
-#define BTILE_JELLY 44 + 16
-#define BTILE_GHOST 44 + 20
-#define BTILE_BEAR 44 + 24
-#define BTILE_COIN 44 + 28
-#define BTILE_DIE 44 + 32
+#define BTILE_PLAYER_HOR 32
+#define BTILE_PLAYER_VER 40
+
+#define BTILE_BALLON 52
+#define BTILE_BEAKER 52 + 4
+#define BTILE_LANTERN 52 + 8
+#define BTILE_FACE 52 + 12
+#define BTILE_JELLY 52 + 16
+#define BTILE_GHOST 52 + 20
+#define BTILE_BEAR 52 + 24
+#define BTILE_COIN 52 + 28
+#define BTILE_DIE 52 + 32
 
 // definición de bits para flags0 (bits)
 #define BIT_UP 1
@@ -113,16 +124,6 @@ udk_t k1;
 #define ENT_BEAR 7 // Pass (Bear)
 #define ENT_COIN 8 // Pontan(Coin)
 #define ENT_ACTIVE 128
-
-// Powerups
-#define POW_FIRE 1 // 01 Fire
-#define POW_BOMB 2 // 02 Bomb
-#define POW_DETONATOR 3 // 03 Detonator
-#define POW_SPEEDUP 4 // 04 Speedup
-#define POW_BOMBWALK 5 // 05 Bomb-Walk
-#define POW_WALLWALK 6 // 06 Wall-Walk
-#define POW_MYSTERY 7 // 07 Mystery
-#define POW_FIREPROOF 7 // 08 Fire-Proof
 
 // Player
 #define PLAYER_LIVES 3
@@ -270,6 +271,7 @@ unsigned char game_stage_print;
 unsigned char game_time;
 unsigned char game_wallwalk;
 unsigned char game_bombwalk;
+unsigned char game_solid_start;
 
 // Valores para controla el dibujado en im2
 unsigned char im2_pause = 1;
@@ -388,6 +390,7 @@ unsigned char move_cup();
 void move_fire();
 
 // Mapas
+void map_add(unsigned char p);
 unsigned int map_calc(unsigned char l, unsigned char c);
 unsigned char map_get(unsigned char l, unsigned char c);
 void map_set(unsigned char v, unsigned char l, unsigned char c);

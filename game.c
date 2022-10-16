@@ -17,13 +17,13 @@
    along with PRISMA ENGINE.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "game.h"
+
 /*
  * Function:  main
  * --------------------
- * main game routine
+ * Rutina principal del juego
  *
  */
-
 void main(void) {
   game_debug = 1;
   if (!game_debug) {
@@ -104,14 +104,13 @@ void main_loop() {
   // Activa rutinas im2
   im2_pause = OFF;
   for (;;) {
-
     // Imprime el tiempo restante de partida
     print_time();
     // Anima las Bombas TODO animación mas lenta
     bomb_anim();
     // Explota Bombas
     explode_check();
-
+    // Colisiones con entidades
     entity_collision();
     if (player_hit) {
       beepSteve(14);
@@ -242,6 +241,7 @@ void draw_restore() {
     }
   }
 }
+
 /*
  * Function:  draw_overwall
  * --------------------
@@ -250,19 +250,20 @@ void draw_restore() {
  */
 void draw_overwall() {
 
-  if (screen[map_calc(*lin, *col)] == BLOCK_WALL) {
+  if (screen[map_calc(*lin, *col)] >= BLOCK_WALL) {
     NIRVANAP_paintC(attrs_wall, *lin, *col - scroll_min);
   }
-  if (screen[map_calc(*lin, 1 + *col)] == BLOCK_WALL) {
+  if (screen[map_calc(*lin, 1 + *col)] >= BLOCK_WALL) {
     NIRVANAP_paintC(attrs_wall, *lin, 1 + *col - scroll_min);
   }
-  if (screen[map_calc(8 + *lin, *col)] == BLOCK_WALL) {
+  if (screen[map_calc(8 + *lin, *col)] >= BLOCK_WALL) {
     NIRVANAP_paintC(attrs_wall, *lin + 8, *col - scroll_min);
   }
-  if (screen[map_calc(8 + *lin, 1 + *col)] == BLOCK_WALL) {
+  if (screen[map_calc(8 + *lin, 1 + *col)] >= BLOCK_WALL) {
     NIRVANAP_paintC(attrs_wall, *lin + 8, 1 + *col - scroll_min);
   }
 }
+
 /*
  * Function:  map_draw
  * --------------------
@@ -270,6 +271,7 @@ void draw_overwall() {
  */
 void map_draw() {
   unsigned int i;
+  unsigned int t;
   // Limpia Sprites Nirvana para evitar problemas
   sprite_reset();
 
@@ -280,7 +282,11 @@ void map_draw() {
   while (lin0 < 192) {
     col0 = 0;
     while (col0 < 31) {
-      NIRVANAP_drawT_raw(screen[i + (scroll_min >> 1)], lin0, col0);
+      t = screen[i + (scroll_min >> 1)];
+      if (t > 16) {
+        t = BLOCK_WALL;
+      }
+      NIRVANAP_drawT_raw(t, lin0, col0);
       ++i;
       col0 += 2;
     }
@@ -498,7 +504,6 @@ void entity_anim() {
       break;
     }
   }
-
   im2_free = 1;
   zx_border(INK_WHITE);
 }
@@ -517,6 +522,7 @@ void entity_collision() {
     ++e;
   }
 }
+
 /*
  * Function:  entity_init
  * --------------------
@@ -658,6 +664,7 @@ void entity_move_rc() {
     }
   }
 }
+
 /*
  * Function:  entity_move
  * --------------------
@@ -734,6 +741,7 @@ void entity_move() {
     timers[entity] = time + speeds[entity];
   }
 }
+
 /*
  * Function:  entity_chdir
  * --------------------
@@ -742,7 +750,6 @@ void entity_move() {
  */
 void entity_chdir() {
   unsigned char r;
-
   r = rand() % 10; // 0 a 9
   if (r < seeds[entity]) {
     // Vuelvo en dirección contraria
@@ -760,7 +767,6 @@ void entity_chdir() {
       dirs[entity] = BIT_LEFT;
       break;
     }
-
   } else {
     // Cambio dirección al azar
     r = rand() % 4;
@@ -780,6 +786,7 @@ void entity_chdir() {
     }
   }
 }
+
 /*
  * Function:  entity_die
  * --------------------
@@ -787,7 +794,6 @@ void entity_chdir() {
  *
  */
 void entity_die(unsigned char e) {
-  zx_border(INK_RED);
   if (e) {
     // Enemigo
     types[e] = ENT_DIE;
@@ -800,6 +806,7 @@ void entity_die(unsigned char e) {
     // Player
   }
 }
+
 /*
  * Function:  move_cup
  * --------------------
@@ -953,6 +960,35 @@ void map_create() {
   entity_add(ENT_GHOST, 1);
   entity_add(ENT_BEAR, 1);
   entity_add(ENT_COIN, 1);
+
+  map_add(POW_FIRE);
+  map_add(POW_BOMB);
+  map_add(POW_BOMBWALK);
+  map_add(POW_DETONATOR);
+  map_add(POW_SPEEDUP);
+  map_add(POW_MYSTERY);
+  map_add(POW_FIREPROOF);
+  map_add(POW_DOOR);
+}
+
+/*
+ * Function:  map_add
+ * --------------------
+ * agrega un powerup mapa
+ */
+void map_add(unsigned char p) {
+  unsigned char c0 = 0;
+  // Posiciona Entidades
+  while (c0 < 1) {
+    col0 = rand() % (16 * 3);
+    lin0 = rand() % 11;
+    col0 = (col0 >> 1) << 1;
+    lin0 = lin0 << 4;
+    if (map_get(lin0, col0) == BLOCK_WALL) {
+      map_set(16 + p, lin0, col0);
+      ++c0;
+    }
+  }
 }
 
 /*
@@ -1025,7 +1061,11 @@ void map_scroll(unsigned char d) {
  */
 unsigned char map_empty(unsigned char l, unsigned char c) {
   unsigned char v = map_get(l, c);
-  if ((v == BLOCK_EMPTY) || (game_wallwalk && v == BLOCK_WALL) || (game_bombwalk && v == BLOCK_BOMB)) {
+  if (v > 16) {
+    v = BLOCK_WALL;
+  }
+
+  if ((v < BLOCK_BOMB) || (game_bombwalk && v < BLOCK_WALL) || (game_wallwalk && v < BLOCK_SOLID)) {
     return 1;
   } else {
     return 0;
@@ -1050,8 +1090,14 @@ unsigned char map_empty_fast(unsigned char l, unsigned char c) {
  * Restaura dibujo de un casillero del mapa, según las coordenadas
  */
 void map_restore(unsigned char l, unsigned char c) {
+  unsigned char t;
   // TODO MACRO
-  btile_draw(screen[map_calc(l, c)], l, c - scroll_min);
+  t = screen[map_calc(l, c)];
+  if (t > 16) {
+    t = BLOCK_WALL;
+  }
+
+  btile_draw(t, l, c - scroll_min);
 }
 
 /*
@@ -1257,7 +1303,7 @@ void explode_anim(unsigned char b) {
     bomb_frame[b] = 1;
     // Dibuja
     im2_pause = 1;
-    explode_draw(b, 8);
+    explode_draw(b, 3);
     // Explota Bordes
     explode_edges(b);
     im2_pause = 0;
@@ -1271,7 +1317,7 @@ void explode_anim(unsigned char b) {
     bomb_frame[b] = 2;
     im2_pause = 1;
     // Dibuja
-    explode_draw(b, 16);
+    explode_draw(b, 6);
     // Explota Bordes
     explode_edges(b);
     // Siguiente Animación
@@ -1409,7 +1455,8 @@ void explode_calc(unsigned char b) {
  * para no volver a dibujar en la dirección de la bomba que la explotó
  */
 void explode_cell(unsigned char b, unsigned char d, unsigned char l, unsigned char c) {
-  switch (screen[map_calc(l, c)]) {
+  unsigned char t = screen[map_calc(l, c)];
+  switch (t) {
   case BLOCK_WALL:
     // Explota los ladrillos
     if (bomb_mode[b] != BOMB_EXPLODE3) {
@@ -1429,6 +1476,11 @@ void explode_cell(unsigned char b, unsigned char d, unsigned char l, unsigned ch
     bomb_activate(d, l, c);
     break;
   default:
+    if (t > 16) {
+      map_set(t - 16, l, c);
+      map_restore(l, c);
+    }
+
     break;
   }
 }
